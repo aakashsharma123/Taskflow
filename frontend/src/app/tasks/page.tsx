@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TaskBoard } from "@/features/tasks/components/task-board";
+import { TaskWorkspace } from "@/features/tasks/components/task-workspace";
 import { sampleTasks } from "@/features/tasks/data/sample-tasks";
 
 export const metadata: Metadata = { title: "Board | Orbit" };
@@ -19,7 +19,7 @@ export default function TasksPage() {
           Local workspace
         </span>
       </div>
-      <TaskBoard tasks={sampleTasks} />
+      <TaskWorkspace tasks={sampleTasks} />
     </div>
   );
 }

@@ -4,9 +4,10 @@ import { useRef } from "react";
 import { Dialog } from "@ark-ui/react/dialog";
 import { DialogPanel } from "@/shared/ui/dialog-panel";
 import { SubtaskList } from "@/features/tasks/components/subtask-list";
+import { TaskPlacementAction } from "./task-placement-action";
 import { TaskLifecycleActions } from "./task-lifecycle-actions";
 import { TaskForm } from "@/features/tasks/components/task-form";
-import type { Task } from "@/features/tasks/schemas/types/task";
+import type { Task, TaskPlacement } from "@/features/tasks/schemas/types/task";
 import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schema";
 import type { SaveResult } from "@/features/tasks/store/task-store";
 
@@ -17,6 +18,7 @@ type TaskDetailsDialogProps = {
   finalFocusEl: () => HTMLElement | null;
   epics: string[];
   assignees: string[];
+  onPlacement: (id: number, placement: TaskPlacement) => SaveResult;
   onLifecycle: (
     id: number,
     action: "archive" | "restore" | "delete",
@@ -39,6 +41,7 @@ export function TaskDetailsDialog({
   assignees,
   onUpdate,
   onLifecycle,
+  onPlacement,
   onAddSubtask,
   onToggleSubtask,
 }: TaskDetailsDialogProps) {
@@ -71,6 +74,16 @@ export function TaskDetailsDialog({
               return result;
             }}
           >
+            {!task.archived && (
+              <TaskPlacementAction
+                task={task}
+                onMove={(placement) => {
+                  const result = onPlacement(task.id, placement);
+                  if (result.ok) onOpenChange(false);
+                  return result;
+                }}
+              />
+            )}
             <TaskLifecycleActions
               task={task}
               onAction={(action) => {

@@ -6,6 +6,8 @@ export type Subtask = {
   completed: boolean;
 };
 
+export type TaskPlacement = "board" | "backlog";
+
 export type Task = {
   id: number;
   title: string;
@@ -15,4 +17,5 @@ export type Task = {
   assignee: string | null;
   subtasks: Subtask[];
   archived: boolean;
+  placement: TaskPlacement;
 };

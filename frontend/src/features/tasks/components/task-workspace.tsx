@@ -5,28 +5,23 @@ import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
 import { EpicsDialog } from "@/features/epics/components/epics-dialog";
 import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog";
 import { TaskDetailsDialog } from "@/features/tasks/components/task-details-dialog";
-import { DragDropProvider } from "@dnd-kit/react";
-import { DraggableTaskCard } from "@/features/tasks/components/draggable-task-card";
 import { TaskFilterToolbar } from "./task-filters";
 import {
   defaultTaskFilters,
   filterTasks,
   hasTaskFilters,
 } from "@/features/tasks/lib/task-filters";
-import { TaskCard } from "./task-card";
-import { BoardColumn } from "@/features/tasks/components/board-column";
-import {
-  taskColumns,
-  isTaskStatus,
-} from "@/features/tasks/constants/task-statuses";
+import { KanbanBoard } from "./kanban-board";
+import { TaskList } from "./task-list";
+import { taskColumns } from "@/features/tasks/constants/task-statuses";
 import type { Task } from "@/features/tasks/schemas/types/task";
 
-export function TaskBoard({
+export function TaskWorkspace({
   tasks: initialTasks,
   mode = "board",
 }: {
   tasks: Task[];
-  mode?: "board" | "archive";
+  mode?: "board" | "archive" | "backlog";
 }) {
   const {
     tasks,
@@ -36,6 +31,7 @@ export function TaskBoard({
     createTask,
     moveTask,
     setArchived,
+    setPlacement,
     deleteTask,
     restoreDeletedTask,
     updateTask,
@@ -63,9 +59,26 @@ export function TaskBoard({
     ),
   ];
   const eligibleTasks = tasks.filter((task) =>
-    mode === "archive" ? task.archived : !task.archived,
+    mode === "archive"
+      ? task.archived
+      : !task.archived && task.placement === mode,
   );
   const filteredTasks = filterTasks(eligibleTasks, filters);
+
+  const openTask = (id: number) => {
+    setSelectedTaskId(id);
+    setDetailsOpen(true);
+  };
+
+  if (!ready)
+    return (
+      <p
+        role="status"
+        className="rounded-2xl border border-base-300 bg-base-100 p-6 text-sm text-base-content/65"
+      >
+        Loading your workspace…
+      </p>
+    );
 
   return (
     <div ref={boardRef}>
@@ -133,125 +146,59 @@ export function TaskBoard({
           disabled={!ready || Boolean(error)}
           onCreate={createEpic}
         />
-        <CreateTaskDialog
-          epics={epics}
-          assignees={assignees}
-          disabled={!ready || Boolean(error)}
-          onCreate={(input) => {
-            const result = createTask(input);
-            if (result.ok) {
-              setFilters(defaultTaskFilters);
-              setNotice("Task created and saved in this browser.");
-            }
-            return result;
-          }}
-        />
+        {mode !== "archive" && (
+          <CreateTaskDialog
+            epics={epics}
+            assignees={assignees}
+            disabled={!ready || Boolean(error)}
+            onCreate={(input) => {
+              const result = createTask(
+                input,
+                mode === "backlog" ? "backlog" : "board",
+              );
+              if (result.ok) {
+                setFilters(defaultTaskFilters);
+                setNotice("Task created and saved in this browser.");
+              }
+              return result;
+            }}
+          />
+        )}
       </div>
-      {mode === "archive" ? (
-        <div
-          role="region"
-          aria-label="Archived tasks"
-          tabIndex={0}
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
-        >
-          {filteredTasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onOpen={() => {
-                setSelectedTaskId(task.id);
-                setDetailsOpen(true);
-              }}
-            />
-          ))}
-          {!filteredTasks.length && (
-            <p className="py-10 text-sm text-base-content/60">
-              No archived tasks match this view.
-            </p>
-          )}
-        </div>
-      ) : (
-        <DragDropProvider
-          onDragEnd={(event) => {
-            if (event.canceled) return;
-            const { source, target } = event.operation;
-            if (
-              !source ||
-              typeof source.id !== "number" ||
-              !target ||
-              !isTaskStatus(target.id)
-            )
-              return;
-            const result = moveTask(source.id, target.id);
+      {mode === "board" ? (
+        <KanbanBoard
+          tasks={filteredTasks}
+          disabled={!ready || Boolean(error)}
+          filtered={hasTaskFilters(filters)}
+          onOpen={openTask}
+          onMove={(id, status) => {
+            const result = moveTask(id, status);
             setActionError(result.ok ? "" : result.error);
             if (result.ok)
               setNotice(
-                `ORB-${source.id} moved to ${taskColumns.find((column) => column.status === target.id)?.label}.`,
+                `ORB-${id} moved to ${taskColumns.find((column) => column.status === status)?.label}.`,
               );
           }}
-        >
-          <div
-            role="region"
-            aria-label="Task board, scroll horizontally to see all columns"
-            tabIndex={0}
-            className="board-scroll overflow-x-auto rounded-lg pb-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
-          >
-            <div className="grid min-w-[1020px] grid-cols-4 items-stretch gap-4">
-              {taskColumns.map((column) => {
-                const items = filteredTasks.filter(
-                  (task) => task.status === column.status,
-                );
-                return (
-                  <BoardColumn key={column.status} status={column.status}>
-                    <div className="flex items-center gap-2 px-1.5 pt-2 pb-4">
-                      <span
-                        aria-hidden="true"
-                        className={`size-2 rounded-full ${column.dot}`}
-                      />
-                      <h2
-                        id={`column-${column.status}`}
-                        className="text-[11px] font-semibold tracking-wider text-base-content/75 uppercase"
-                      >
-                        {column.label}
-                      </h2>
-                      <span
-                        aria-label={`${items.length} tasks`}
-                        className="rounded bg-base-300/60 px-1.5 py-0.5 text-[10px] font-medium text-base-content/70"
-                      >
-                        {items.length}
-                      </span>
-                    </div>
-                    {items.length ? (
-                      <ul
-                        aria-label={`${column.label} tasks`}
-                        className="flex flex-col gap-3"
-                      >
-                        {items.map((task) => (
-                          <li key={task.id}>
-                            <DraggableTaskCard
-                              disabled={!ready || Boolean(error)}
-                              task={task}
-                              onOpen={() => {
-                                setSelectedTaskId(task.id);
-                                setDetailsOpen(true);
-                              }}
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="rounded-md border border-dashed border-base-300 px-4 py-8 text-center text-xs leading-6 text-base-content/65">
-                        {hasTaskFilters(filters)
-                          ? "No matching tasks"
-                          : "No tasks here yet"}
-                      </p>
-                    )}
-                  </BoardColumn>
-                );
-              })}
-            </div>
-          </div>
-        </DragDropProvider>
+        />
+      ) : (
+        <TaskList
+          tasks={filteredTasks}
+          mode={mode}
+          disabled={!ready || Boolean(error)}
+          onOpen={openTask}
+          onActivate={(id) => {
+            const result = setPlacement(id, "board");
+            setActionError(result.ok ? "" : result.error);
+            if (result.ok) {
+              setNotice(`ORB-${id} moved to Board.`);
+              requestAnimationFrame(() =>
+                boardRef.current
+                  ?.querySelector<HTMLElement>('[role="region"]')
+                  ?.focus(),
+              );
+            }
+          }}
+        />
       )}
       <p className="mt-2 text-[11px] text-base-content/60">
         Saved in this browser · Starts with sample tasks.
@@ -269,6 +216,14 @@ export function TaskBoard({
           boardRef.current?.querySelector<HTMLElement>('[role="region"]') ??
           null
         }
+        onPlacement={(id, placement) => {
+          const result = setPlacement(id, placement);
+          if (result.ok)
+            setNotice(
+              `ORB-${id} moved to ${placement === "board" ? "Board" : "Backlog"}.`,
+            );
+          return result;
+        }}
         onLifecycle={(id, action) => {
           const result =
             action === "delete"

@@ -35,6 +35,7 @@ export function useTaskStore(initialTasks: Task[]) {
     ...snapshot,
     createTask: store.createTask,
     moveTask: store.moveTask,
+    setPlacement: store.setPlacement,
     setArchived: store.setArchived,
     deleteTask: store.deleteTask,
     restoreDeletedTask: store.restoreDeletedTask,

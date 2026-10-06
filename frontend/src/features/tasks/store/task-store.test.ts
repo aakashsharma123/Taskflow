@@ -13,6 +13,7 @@ const seed: Task[] = [
     assignee: null,
     subtasks: [],
     archived: false,
+    placement: "board",
   },
 ];
 const input = {
@@ -265,4 +266,21 @@ test("failed deletion retains the task", () => {
   assert.equal(store.deleteTask(9).ok, false);
   assert.deepEqual(store.getSnapshot().tasks, seed);
   assert.deepEqual(store.getSnapshot().removedTasks, []);
+});
+
+test("backlog placement persists, keeps workflow and children, and cannot move archived work", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.createTask(input, "backlog").ok, true);
+  store.addSubtask(10, "Preserve child");
+  assert.equal(store.getSnapshot().tasks[0].placement, "backlog");
+  assert.equal(store.setPlacement(10, "board").ok, true);
+  store.load();
+  assert.equal(store.getSnapshot().tasks[0].placement, "board");
+  assert.equal(store.getSnapshot().tasks[0].status, "in_review");
+  assert.equal(store.getSnapshot().tasks[0].subtasks.length, 1);
+  store.setArchived(10, true);
+  assert.equal(store.setPlacement(10, "backlog").ok, false);
+  assert.equal(store.setPlacement(999, "board").ok, false);
 });
