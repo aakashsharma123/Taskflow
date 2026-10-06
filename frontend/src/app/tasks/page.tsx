@@ -16,7 +16,7 @@ export default function TasksPage() {
           </p>
         </div>
         <span className="badge badge-outline mt-1 rounded-md border-base-300 px-3 py-3 text-[11px] text-base-content/65">
-          Sample project
+          Local workspace
         </span>
       </div>
       <TaskBoard tasks={sampleTasks} />

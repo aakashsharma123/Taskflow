@@ -89,7 +89,7 @@ export function TaskForm({
   return (
     <form
       className="flex min-h-0 flex-col"
-      aria-label="New task details"
+      aria-label="Task details form"
       noValidate
       onSubmit={handleSubmit}
       onChange={() => setSaveError("")}

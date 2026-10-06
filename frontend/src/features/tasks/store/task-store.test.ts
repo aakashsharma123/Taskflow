@@ -11,6 +11,7 @@ const seed: Task[] = [
     priority: "medium",
     epic: null,
     assignee: null,
+    subtasks: [],
   },
 ];
 const input = {
@@ -111,4 +112,107 @@ test("updates a task without changing its ID or unrelated tasks", () => {
     restored.getSnapshot().tasks.find((task) => task.id === 9)?.title,
     "Updated seed",
   );
+});
+
+test("epics survive refresh without tasks and can be assigned", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.createEpic("  Onboarding  ").ok, true);
+  assert.equal(store.createEpic("onboarding").ok, false);
+  const restored = createTaskStore(seed, () => storage);
+  restored.load();
+  assert.deepEqual(restored.getSnapshot().epics, ["Onboarding"]);
+  assert.equal(restored.createTask({ ...input, epic: "Onboarding" }).ok, true);
+  assert.equal(
+    restored.createTask({ ...input, epic: "Unavailable" }).ok,
+    false,
+  );
+});
+
+test("subtask completion persists without changing the parent status", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.addSubtask(9, "  Sketch the screen  ").ok, true);
+  assert.equal(store.addSubtask(9, " ").ok, false);
+  assert.equal(store.addSubtask(9, "Review the layout").ok, true);
+  assert.equal(store.setSubtaskCompleted(9, 1, true).ok, true);
+  assert.equal(store.setSubtaskCompleted(9, 2, true).ok, true);
+  assert.equal(store.getSnapshot().tasks[0].status, "todo");
+  assert.equal(store.setSubtaskCompleted(9, 999, true).ok, false);
+  assert.equal(store.addSubtask(999, "Missing parent").ok, false);
+  assert.equal(
+    store.updateTask(9, { ...input, title: "Updated parent" }).ok,
+    true,
+  );
+  const restored = createTaskStore(seed, () => storage);
+  restored.load();
+  assert.deepEqual(restored.getSnapshot().tasks[0].subtasks, [
+    { id: 1, title: "Sketch the screen", completed: true },
+    { id: 2, title: "Review the layout", completed: true },
+  ]);
+  restored.setSubtaskCompleted(9, 1, false);
+  assert.equal(restored.getSnapshot().tasks[0].subtasks[0].completed, false);
+});
+
+test("migrates tasks saved before epic catalogs and subtasks existed", () => {
+  const storage = memoryStorage();
+  const legacy = {
+    id: 9,
+    title: "Old task",
+    status: "todo",
+    priority: "medium",
+    epic: "Workspace",
+    assignee: null,
+  };
+  storage.setItem(
+    TASK_STORAGE_KEY,
+    JSON.stringify({ version: 1, tasks: [legacy] }),
+  );
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.getSnapshot().error, null);
+  assert.deepEqual(store.getSnapshot().epics, ["Workspace"]);
+  assert.deepEqual(store.getSnapshot().tasks[0].subtasks, []);
+  assert.equal(store.addSubtask(9, "Continue working").ok, true);
+});
+
+test("rejects invalid hierarchy and preserves the saved blob", () => {
+  const storage = memoryStorage();
+  const invalid = JSON.stringify({
+    version: 1,
+    tasks: [
+      {
+        ...seed[0],
+        subtasks: [{ id: 1, title: "Child", completed: false, subtasks: [] }],
+      },
+    ],
+    epics: [],
+  });
+  storage.setItem(TASK_STORAGE_KEY, invalid);
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert(store.getSnapshot().error);
+  assert.equal(store.createEpic("New epic").ok, false);
+  assert.equal(storage.getItem(TASK_STORAGE_KEY), invalid);
+});
+
+test("failed subtask writes leave completion and draft data unchanged", () => {
+  const storage = memoryStorage();
+  let fail = false;
+  const store = createTaskStore(seed, () => ({
+    ...storage,
+    setItem(key, value) {
+      if (fail) throw new Error("Quota");
+      storage.setItem(key, value);
+    },
+  }));
+  store.load();
+  store.addSubtask(9, "First step");
+  fail = true;
+  assert.equal(store.setSubtaskCompleted(9, 1, true).ok, false);
+  assert.equal(store.addSubtask(9, "Retry me").ok, false);
+  assert.equal(store.getSnapshot().tasks[0].subtasks[0].completed, false);
+  assert.equal(store.getSnapshot().tasks[0].subtasks.length, 1);
 });

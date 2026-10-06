@@ -35,6 +35,9 @@ export function useTaskStore(initialTasks: Task[]) {
     ...snapshot,
     createTask: store.createTask,
     updateTask: store.updateTask,
+    createEpic: store.createEpic,
+    addSubtask: store.addSubtask,
+    setSubtaskCompleted: store.setSubtaskCompleted,
     reload: store.load,
   };
 }
