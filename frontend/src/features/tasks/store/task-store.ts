@@ -54,6 +54,7 @@ export function createTaskStore(
     epics: taskEpics(seed),
     sprints: [],
     settings: {
+      currentMember: null,
       projectName: "Orbit",
       appearance: "apricot",
       members: [
@@ -258,6 +259,19 @@ export function createTaskStore(
       };
     },
     load,
+    selectMember(name: string | null): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      if (name !== null && !snapshot.settings.members.includes(name))
+        return { ok: false, error: "This member is no longer available." };
+      return save(
+        snapshot.tasks,
+        snapshot.epics,
+        snapshot.removedTasks,
+        snapshot.sprints,
+        { ...snapshot.settings, currentMember: name },
+      );
+    },
     updateSettings(input: ProjectSettingsInput): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
@@ -316,6 +330,10 @@ export function createTaskStore(
         snapshot.sprints,
         {
           ...snapshot.settings,
+          currentMember:
+            snapshot.settings.currentMember === name
+              ? null
+              : snapshot.settings.currentMember,
           members: snapshot.settings.members.filter(
             (member) => member !== name,
           ),

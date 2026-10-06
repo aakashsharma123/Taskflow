@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 const links = [
+  { href: "/my-work", label: "My Work", icon: "my-work" },
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/backlog", label: "Backlog", icon: "backlog" },
   { href: "/sprints", label: "Sprints", icon: "sprints" },
@@ -41,7 +42,12 @@ function NavigationIcon({ kind }: { kind: string }) {
       strokeWidth="1.7"
       className="size-5 shrink-0"
     >
-      {kind === "dashboard" ? (
+      {kind === "my-work" ? (
+        <>
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+        </>
+      ) : kind === "dashboard" ? (
         <>
           <rect x="3" y="3" width="7" height="7" rx="1.5" />
           <rect x="14" y="3" width="7" height="7" rx="1.5" />

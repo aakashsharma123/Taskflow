@@ -634,3 +634,17 @@ test("legacy member catalogs migrate from assignments and failed settings writes
   assert.equal(store.getSnapshot().tasks[0].assignee, "Maya");
   assert.deepEqual(store.getSnapshot().tasks[0].activity, []);
 });
+
+test("local member selection persists, validates names and clears when the member is removed", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.addMember("Maya").ok, true);
+  assert.equal(store.selectMember("Missing").ok, false);
+  assert.equal(store.selectMember("Maya").ok, true);
+  const restored = createTaskStore(seed, () => storage);
+  restored.load();
+  assert.equal(restored.getSnapshot().settings.currentMember, "Maya");
+  assert.equal(restored.removeMember("Maya").ok, true);
+  assert.equal(restored.getSnapshot().settings.currentMember, null);
+});

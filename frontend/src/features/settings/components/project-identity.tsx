@@ -1,7 +1,7 @@
 "use client";
-import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
+import { useWorkspace } from "@/features/workspace/components/workspace-provider";
 export function ProjectIdentity() {
-  const { settings } = useTaskStore();
+  const { settings } = useWorkspace();
   return (
     <div className="flex min-w-0 items-center gap-3">
       <span
@@ -33,7 +33,7 @@ export function ProjectIdentity() {
   );
 }
 export function ProjectBreadcrumb() {
-  const { settings } = useTaskStore();
+  const { settings } = useWorkspace();
   return (
     <p className="mb-2 text-xs text-base-content/60 [overflow-wrap:anywhere]">
       Projects / {settings.projectName}

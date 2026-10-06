@@ -44,6 +44,7 @@ function useWorkspaceStore() {
   );
   return {
     ...snapshot,
+    selectMember: store.selectMember,
     updateSettings: store.updateSettings,
     addMember: store.addMember,
     removeMember: store.removeMember,

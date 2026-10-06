@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
+import { useWorkspace } from "@/features/workspace/components/workspace-provider";
 import { summarizeProject } from "@/features/dashboard/lib/project-summary";
 import { CompletionTrend } from "./completion-trend";
 import { EpicProgress } from "./epic-progress";
 export function ProjectDashboard() {
-  const { tasks, epics, history, ready, error, reload } = useTaskStore();
+  const { tasks, epics, history, ready, error, reload } = useWorkspace();
   if (!ready)
     return (
       <p

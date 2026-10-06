@@ -1,5 +1,5 @@
 "use client";
-import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
+import { useWorkspace } from "@/features/workspace/components/workspace-provider";
 import { ProjectSettingsForm } from "./project-settings-form";
 import { TeamMembers } from "./team-members";
 export function WorkspaceSettings() {
@@ -13,7 +13,7 @@ export function WorkspaceSettings() {
     addMember,
     removeMember,
     reload,
-  } = useTaskStore();
+  } = useWorkspace();
   if (!ready)
     return (
       <p role="status" className="text-sm">
