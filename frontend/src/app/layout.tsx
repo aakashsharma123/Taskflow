@@ -6,8 +6,8 @@ import "@fontsource/poppins/latin-600.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TaskFlow",
-  description: "Organize your tasks with TaskFlow.",
+  title: "Orbit",
+  description: "Organize your tasks with Orbit.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

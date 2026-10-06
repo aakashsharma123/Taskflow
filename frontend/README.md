@@ -1,4 +1,4 @@
-# TaskFlow frontend
+# Orbit frontend
 
 Next.js App Router with strict TypeScript, Tailwind CSS, DaisyUI, ESLint, and
 Prettier. Poppins (400, 500, and 600) is self-hosted through Fontsource. The `@/*`
@@ -14,8 +14,10 @@ npm run dev
 ```
 
 Open http://localhost:3000. The home route redirects to `/tasks`.
-The current checkpoint is a responsive workspace shell and a static task-page
-placeholder. It does not fetch task data or require a backend or environment variables.
+The current checkpoint is a responsive workspace shell and a four-column task board
+using local sample data. Search and epic filtering work locally. Cards are read-only;
+dragging and task details will come later. No backend or environment variables are required.
+The frontend board uses a status field; the existing backend still uses completed.
 
 ## Checks
 
@@ -33,11 +35,16 @@ Use `npm run format` to apply formatting.
 ## Review guide
 
 - `src/app/layout.tsx`: root layout, font imports, and metadata.
-- `src/app/globals.css`: theme tokens, base styles, and decorative illustration.
+- `src/app/globals.css`: theme tokens, base styles, and workspace decoration.
 - `src/shared/components/workspace-shell.tsx`: desktop sidebar, mobile navigation,
   header, and skip link. Mobile navigation uses native disclosure behavior.
 - `src/app/tasks/layout.tsx`: applies the workspace shell to task routes.
-- `src/app/tasks/page.tsx`: task-page heading and introductory placeholder.
+- `src/app/tasks/page.tsx`: board heading and sample data composition.
+- `src/features/tasks/components/task-board.tsx`: columns and local search/filter state.
+- `src/features/tasks/components/task-card.tsx`: reusable card with typed task props.
+- `src/features/tasks/types/task.ts`: the current task data contract.
+- `src/features/tasks/data/sample-tasks.ts`: explicitly labeled preview data.
 
-These are Server Components; no client state is needed for this checkpoint.
-Feature modules and additional libraries will be introduced with their first use cases.
+The shell and route are Server Components. TaskBoard is a Client Component because
+its search and epic filters use local React state.
+Additional libraries will be introduced with their first use cases.
