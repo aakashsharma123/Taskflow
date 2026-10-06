@@ -50,6 +50,7 @@ export function SprintCard({
   }
   return (
     <article
+      id={`sprint-${sprint.id}`}
       aria-labelledby={`${id}-title`}
       className={`rounded-2xl border bg-base-100 p-5 sm:p-6 ${sprint.status === "active" ? "border-secondary shadow-sm" : "border-base-300/80"}`}
     >

@@ -1,3 +1,4 @@
+import { WorkspaceToolbar } from "./workspace-toolbar";
 import { ProjectIdentity } from "@/features/settings/components/project-identity";
 import { ProjectNavigation } from "./project-navigation";
 import type { ReactNode } from "react";
@@ -11,7 +12,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <aside className="workspace-navigation hidden flex-col bg-primary text-primary-content px-4 py-7 lg:flex">
+      <aside className="workspace-navigation sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-primary text-primary-content px-4 py-7 lg:flex">
         <div className="px-1">
           <ProjectIdentity />
         </div>
@@ -20,10 +21,8 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
         </p>
         <ProjectNavigation />
         <div className="mt-auto border-t border-primary-content/15 px-2 pt-5 text-[11px] leading-6 text-primary-content/70">
-          <p className="font-medium text-primary-content/90">
-            Your project workspace
-          </p>
-          <p>One team. A clear way forward.</p>
+          <p className="font-medium text-primary-content/90">Orbit workspace</p>
+          <p>A little clarity. Every day.</p>
         </div>
       </aside>
       <div className="min-w-0 bg-workspace">
@@ -38,6 +37,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
             </div>
           </details>
         </header>
+        <WorkspaceToolbar />
         <main
           id="main-content"
           tabIndex={-1}

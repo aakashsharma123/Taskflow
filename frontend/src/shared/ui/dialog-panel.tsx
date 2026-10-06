@@ -13,7 +13,7 @@ export function DialogPanel({
 }: {
   title: string;
   description: string;
-  kind?: "task" | "epics";
+  kind?: "task" | "epics" | "search";
   children: ReactNode;
 }) {
   return (
@@ -27,7 +27,7 @@ export function DialogPanel({
                 aria-hidden="true"
                 className="hidden size-12 shrink-0 items-center justify-center rounded-2xl border border-secondary/50 bg-secondary/25 text-primary sm:flex"
               >
-                {kind === "epics" ? (
+                {kind !== "task" ? (
                   <OrbitMark className="size-7" />
                 ) : (
                   <svg
@@ -44,7 +44,12 @@ export function DialogPanel({
               </span>
               <div className="min-w-0">
                 <p className="mb-1.5 text-[10px] font-semibold tracking-[0.16em] text-base-content/65 uppercase">
-                  Orbit / {kind === "epics" ? "Planning" : "Tasks"}
+                  Orbit /{" "}
+                  {kind === "epics"
+                    ? "Planning"
+                    : kind === "search"
+                      ? "Workspace"
+                      : "Tasks"}
                 </p>
                 <Dialog.Title className="text-xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-2xl">
                   {title}
