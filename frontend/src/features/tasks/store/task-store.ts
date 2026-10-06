@@ -77,6 +77,21 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
       };
     },
     load,
+    updateTask(id: number, input: CreateTaskInput): SaveResult {
+      load();
+      if (snapshot.error) return { ok: false, error: snapshot.error };
+      if (!snapshot.tasks.some((task) => task.id === id))
+        return {
+          ok: false,
+          error:
+            "This task is no longer available. Close the dialog and reload your workspace.",
+        };
+      return save(
+        snapshot.tasks.map((task) =>
+          task.id === id ? { ...task, ...input } : task,
+        ),
+      );
+    },
     createTask(input: CreateTaskInput): SaveResult {
       if (!snapshot.ready)
         return {

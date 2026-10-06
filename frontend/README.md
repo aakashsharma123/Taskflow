@@ -17,7 +17,8 @@ Open http://localhost:3000. The home route redirects to `/tasks`.
 The board starts with sample tasks. New tasks are validated with Zod, added to their
 status column, and saved in this browser. Saved data is checked before loading;
 read failures pause changes, and write failures keep the form open for retry.
-Tasks synchronize across tabs. No backend or environment variables are required.
+Open a task title to edit its details. Status changes move the card between columns.
+Create and edit share the same form and schema. Tasks synchronize across tabs. No backend or environment variables are required.
 Titles are trimmed and limited to 120 characters. Empty epic and assignee selections
 become null. The frontend uses status; the existing backend still uses completed.
 

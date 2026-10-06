@@ -31,5 +31,10 @@ export function useTaskStore(initialTasks: Task[]) {
     store.getSnapshot,
     store.getServerSnapshot,
   );
-  return { ...snapshot, createTask: store.createTask, reload: store.load };
+  return {
+    ...snapshot,
+    createTask: store.createTask,
+    updateTask: store.updateTask,
+    reload: store.load,
+  };
 }
