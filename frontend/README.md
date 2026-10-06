@@ -90,3 +90,5 @@ Commit subjects follow `type / short description`, with a short structural body.
 Task descriptions are optional plain text, limited to 5,000 characters. Create and edit share the same Zod rules. Existing workspaces migrate to empty descriptions.
 
 Task labels are entered with commas (five unique names, 24 characters each) and get stable colors on cards. Due dates are calendar dates in the user’s local day; unfinished, unarchived tasks become overdue after that date. Filters combine labels and due dates; date sorting puts undated tasks last.
+
+Task details include the latest 100 saved activity events. Changes to fields, subtasks and lifecycle actions are recorded in the same storage write as the task. Failed writes and no-op changes create no events; migrations never invent historical activity. This is local change history, not an authenticated audit log.

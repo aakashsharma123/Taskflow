@@ -8,6 +8,7 @@ const seed: Task[] = [
   {
     id: 9,
     title: "Seed",
+    activity: [],
     description: "",
     labels: [],
     dueDate: null,
@@ -231,10 +232,13 @@ test("moving a task changes only its status and survives reload", () => {
   const store = createTaskStore(seed, () => storage);
   store.load();
   assert.equal(store.moveTask(9, "done").ok, true);
-  assert.deepEqual(store.getSnapshot().tasks[0], {
-    ...seed[0],
-    status: "done",
-  });
+  assert.deepEqual(
+    { ...store.getSnapshot().tasks[0], activity: [] },
+    {
+      ...seed[0],
+      status: "done",
+    },
+  );
   const restored = createTaskStore(seed, () => storage);
   restored.load();
   assert.equal(restored.getSnapshot().tasks[0].status, "done");
@@ -255,7 +259,10 @@ test("archive and deletion preserve children, undo and unique IDs", () => {
   assert.equal(store.createTask(input).ok, true);
   assert.equal(store.getSnapshot().tasks[0].id, 10);
   assert.equal(store.restoreDeletedTask(9).ok, true);
-  assert.deepEqual(store.getSnapshot().tasks[0], before);
+  assert.deepEqual(
+    { ...store.getSnapshot().tasks[0], activity: before.activity },
+    before,
+  );
   assert.equal(store.restoreDeletedTask(9).ok, false);
   store.load();
   assert.equal(store.getSnapshot().tasks.length, 2);
@@ -406,4 +413,61 @@ test("metadata migrates and saves labels and calendar dates", () => {
   store.load();
   assert.deepEqual(store.getSnapshot().tasks[0].labels, ["design"]);
   assert.equal(store.getSnapshot().tasks[0].dueDate, "2026-10-06");
+});
+
+test("activity records saved changes and lifecycle undo without invented migration events", () => {
+  const storage = memoryStorage();
+  let fail = false;
+  const store = createTaskStore(
+    seed,
+    () => ({
+      ...storage,
+      setItem(key, value) {
+        if (fail) throw new Error("Quota");
+        storage.setItem(key, value);
+      },
+    }),
+    () => new Date("2026-10-06T12:00:00Z"),
+  );
+  store.load();
+  assert.deepEqual(store.getSnapshot().tasks[0].activity, []);
+  store.moveTask(9, "done");
+  store.moveTask(9, "done");
+  store.addSubtask(9, "Check keyboard");
+  store.setSubtaskCompleted(9, 1, true);
+  assert.deepEqual(
+    store.getSnapshot().tasks[0].activity.map((event) => event.message),
+    [
+      "Status changed from To do to Done",
+      "Subtask added: Check keyboard",
+      "Completed subtask: Check keyboard",
+    ],
+  );
+  fail = true;
+  assert.equal(store.moveTask(9, "todo").ok, false);
+  assert.equal(store.getSnapshot().tasks[0].activity.length, 3);
+  fail = false;
+  store.deleteTask(9);
+  store.restoreDeletedTask(9);
+  store.load();
+  assert.equal(
+    store.getSnapshot().tasks[0].activity.at(-1)?.message,
+    "Restored after deletion",
+  );
+  assert.equal(
+    store.getSnapshot().tasks[0].activity[0].at,
+    "2026-10-06T12:00:00.000Z",
+  );
+});
+
+test("task activity retains the newest 100 entries", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  for (let i = 0; i < 105; i++) store.moveTask(9, i % 2 ? "todo" : "done");
+  store.load();
+  const activity = store.getSnapshot().tasks[0].activity;
+  assert.equal(activity.length, 100);
+  assert.equal(activity[0].id, 6);
+  assert.equal(activity.at(-1)?.id, 105);
 });

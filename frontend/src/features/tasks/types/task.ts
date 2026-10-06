@@ -8,10 +8,13 @@ export type Subtask = {
 
 export type TaskPlacement = "board" | "backlog";
 
+export type TaskActivity = { id: number; at: string; message: string };
+
 export type Task = {
   id: number;
   title: string;
   description: string;
+  activity: TaskActivity[];
   labels: string[];
   dueDate: string | null;
   status: TaskStatus;

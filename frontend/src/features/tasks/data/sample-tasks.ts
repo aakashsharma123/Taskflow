@@ -100,11 +100,18 @@ const taskFixtures = [
   },
 ] satisfies Omit<
   Task,
-  "subtasks" | "archived" | "placement" | "description" | "labels" | "dueDate"
+  | "subtasks"
+  | "archived"
+  | "placement"
+  | "description"
+  | "labels"
+  | "dueDate"
+  | "activity"
 >[];
 
 export const sampleTasks: Task[] = taskFixtures.map((task) => ({
   ...task,
+  activity: [],
   description: "",
   labels: [],
   dueDate: null,

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { recordTaskActivity, taskActivitySchema } from "./task-activity";
 import {
   taskLabelsSchema,
   taskDueDateSchema,
@@ -31,6 +32,7 @@ const savedTaskSchema: z.ZodType<Task> = z.object({
   id: idSchema,
   archived: z.boolean().default(false),
   placement: z.enum(["board", "backlog"]).default("board"),
+  activity: taskActivitySchema,
   title: taskTitleSchema,
   description: taskDescriptionSchema,
   labels: taskLabelsSchema,
@@ -149,10 +151,29 @@ export function createTaskStore(
     removedTasks = snapshot.removedTasks,
   ): SaveResult {
     try {
+      const timestamp = now().toISOString();
+      const withActivity = (items: Task[], removed: boolean) =>
+        items.map((task) => {
+          const previous = [...snapshot.tasks, ...snapshot.removedTasks].find(
+            (item) => item.id === task.id,
+          );
+          return {
+            ...task,
+            activity: recordTaskActivity(
+              previous,
+              task,
+              snapshot.removedTasks.some((item) => item.id === task.id),
+              removed,
+              timestamp,
+            ),
+          };
+        });
+      tasks = withActivity(tasks, false);
+      removedTasks = withActivity(removedTasks, true);
       const history = recordWorkspaceDay(
         snapshot.history,
         tasks,
-        now().toISOString().slice(0, 10),
+        timestamp.slice(0, 10),
       );
       getStorage().setItem(
         TASK_STORAGE_KEY,
@@ -270,7 +291,14 @@ export function createTaskStore(
       if (!Number.isSafeInteger(id))
         return { ok: false, error: "A new task ID could not be assigned." };
       return save([
-        { ...validated.data, id, subtasks: [], archived: false, placement },
+        {
+          ...validated.data,
+          id,
+          activity: [],
+          subtasks: [],
+          archived: false,
+          placement,
+        },
         ...snapshot.tasks,
       ]);
     },
