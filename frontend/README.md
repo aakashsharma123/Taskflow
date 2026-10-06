@@ -17,6 +17,9 @@ Open http://localhost:3000. The home route redirects to `/tasks`.
 The current checkpoint is a responsive workspace shell and a four-column task board
 using local sample data. Search and epic filtering work locally. Cards are read-only;
 dragging and task details will come later. No backend or environment variables are required.
+The New task button opens an Ark UI dialog with title, status, priority, epic, and
+assignee fields. This checkpoint is a form preview: submission is disabled until
+validation and local saving are implemented. Options come from the sample tasks.
 The frontend board uses a status field; the existing backend still uses completed.
 
 ## Checks
