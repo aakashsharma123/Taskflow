@@ -648,3 +648,29 @@ test("local member selection persists, validates names and clears when the membe
   assert.equal(restored.removeMember("Maya").ok, true);
   assert.equal(restored.getSnapshot().settings.currentMember, null);
 });
+
+test("epic rename and removal update live, archived and deleted records without removing work", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  store.createEpic("Goal");
+  store.createTask({ ...input, epic: "Goal" });
+  const id = store.getSnapshot().tasks[0].id;
+  store.deleteTask(id);
+  assert.equal(store.renameEpic("Goal", "Next goal").ok, true);
+  assert.equal(store.getSnapshot().removedTasks[0].epic, "Next goal");
+  store.restoreDeletedTask(id);
+  store.setArchived(id, true);
+  assert.equal(store.deleteEpic("Next goal").ok, true);
+  assert.equal(
+    store.getSnapshot().tasks.find((task) => task.id === id)?.epic,
+    null,
+  );
+  assert.equal(
+    store.getSnapshot().tasks.find((task) => task.id === id)?.archived,
+    true,
+  );
+  const restored = createTaskStore(seed, () => storage);
+  restored.load();
+  assert.equal(restored.getSnapshot().error, null);
+});

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { OrbitMark } from "@/shared/ui/orbit-mark";
 import type { Task } from "@/features/tasks/types/task";
 
@@ -10,7 +11,9 @@ const colors = [
 export function EpicCollection({
   epics,
   tasks,
+  expanded = false,
 }: {
+  expanded?: boolean;
   epics: string[];
   tasks: Task[];
 }) {
@@ -55,7 +58,11 @@ export function EpicCollection({
         </span>
       </div>
       {groups.length ? (
-        <ul className="space-y-3">
+        <ul
+          className={
+            expanded ? "grid gap-4 md:grid-cols-2 xl:grid-cols-3" : "space-y-3"
+          }
+        >
           {groups.map((group, index) => {
             const state =
               group.total === 0
@@ -79,7 +86,18 @@ export function EpicCollection({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm leading-6 font-semibold [overflow-wrap:anywhere]">
-                      {group.name}
+                      <Link
+                        className="rounded-sm hover:underline underline-offset-4"
+                        href={`/epics/${encodeURIComponent(group.name)}`}
+                      >
+                        {group.name}{" "}
+                        <span
+                          aria-hidden="true"
+                          className="text-base-content/40"
+                        >
+                          ↗
+                        </span>
+                      </Link>
                     </p>
                     <p className="mt-1 text-[10px] text-base-content/65">
                       {group.total}{" "}

@@ -19,7 +19,7 @@ export function EpicProgress({
             All saved tasks, including archived work.
           </p>
         </div>
-        <Link href="/backlog" className="btn btn-ghost btn-sm text-xs">
+        <Link href="/epics" className="btn btn-ghost btn-sm text-xs">
           Plan next steps <span aria-hidden="true">↗</span>
         </Link>
       </div>
@@ -27,7 +27,12 @@ export function EpicProgress({
         {epics.map((epic) => (
           <li key={epic.name} className="rounded-xl bg-base-200/60 p-4">
             <h3 className="text-xs font-semibold [overflow-wrap:anywhere]">
-              {epic.name}
+              <Link
+                className="hover:underline underline-offset-4"
+                href={`/epics/${encodeURIComponent(epic.name)}`}
+              >
+                {epic.name}
+              </Link>
             </h3>
             <p className="mt-2 text-[11px] text-base-content/65">
               {epic.completed} of {epic.total} tasks done · {epic.percent}%
@@ -43,7 +48,7 @@ export function EpicProgress({
       </ul>
       {!epics.length && (
         <p className="mt-5 text-xs text-base-content/60">
-          Create an epic on Board to track a larger goal here.
+          Create an epic in Epics to track a larger goal here.
         </p>
       )}
     </section>

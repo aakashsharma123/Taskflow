@@ -504,6 +504,41 @@ export function createTaskStore(
         return { ok: false, error: validated.error.issues[0].message };
       return save(snapshot.tasks, [...snapshot.epics, validated.data]);
     },
+    renameEpic(name: string, nextName: string): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      if (!snapshot.epics.includes(name))
+        return { ok: false, error: "This epic is no longer available." };
+      const validated = createEpicSchema(
+        snapshot.epics.filter((epic) => epic !== name),
+      ).safeParse(nextName);
+      if (!validated.success)
+        return { ok: false, error: validated.error.issues[0].message };
+      const rename = (tasks: Task[]) =>
+        tasks.map((task) =>
+          task.epic === name ? { ...task, epic: validated.data } : task,
+        );
+      return save(
+        rename(snapshot.tasks),
+        snapshot.epics.map((epic) => (epic === name ? validated.data : epic)),
+        rename(snapshot.removedTasks),
+      );
+    },
+    deleteEpic(name: string): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      if (!snapshot.epics.includes(name))
+        return { ok: false, error: "This epic is no longer available." };
+      const unlink = (tasks: Task[]) =>
+        tasks.map((task) =>
+          task.epic === name ? { ...task, epic: null } : task,
+        );
+      return save(
+        unlink(snapshot.tasks),
+        snapshot.epics.filter((epic) => epic !== name),
+        unlink(snapshot.removedTasks),
+      );
+    },
     addSubtask(taskId: number, title: string): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;

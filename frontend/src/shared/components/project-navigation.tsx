@@ -5,6 +5,7 @@ const links = [
   { href: "/my-work", label: "My Work", icon: "my-work" },
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/backlog", label: "Backlog", icon: "backlog" },
+  { href: "/epics", label: "Epics", icon: "epics" },
   { href: "/sprints", label: "Sprints", icon: "sprints" },
   { href: "/tasks", label: "Board", icon: "board" },
   { href: "/tasks/archive", label: "Archive", icon: "archive" },
@@ -19,8 +20,13 @@ export function ProjectNavigation() {
           <li key={link.href}>
             <Link
               href={link.href}
-              aria-current={pathname === link.href ? "page" : undefined}
-              className={`${pathname === link.href ? "nav-active" : ""} gap-3 rounded-md px-3 py-3 text-sm font-medium`}
+              aria-current={
+                pathname === link.href ||
+                (link.href === "/epics" && pathname.startsWith("/epics/"))
+                  ? "page"
+                  : undefined
+              }
+              className={`${pathname === link.href || (link.href === "/epics" && pathname.startsWith("/epics/")) ? "nav-active" : ""} gap-3 rounded-md px-3 py-3 text-sm font-medium`}
             >
               <NavigationIcon kind={link.icon} />
               {link.label}
@@ -42,7 +48,18 @@ function NavigationIcon({ kind }: { kind: string }) {
       strokeWidth="1.7"
       className="size-5 shrink-0"
     >
-      {kind === "my-work" ? (
+      {kind === "epics" ? (
+        <>
+          <circle cx="12" cy="12" r="4" />
+          <ellipse
+            cx="12"
+            cy="12"
+            rx="10"
+            ry="5"
+            transform="rotate(-35 12 12)"
+          />
+        </>
+      ) : kind === "my-work" ? (
         <>
           <circle cx="12" cy="8" r="4" />
           <path d="M4 21v-2a8 8 0 0 1 16 0v2" />

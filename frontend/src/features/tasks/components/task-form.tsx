@@ -21,6 +21,7 @@ type TaskFormProps = {
   epics: string[];
   assignees: string[];
   initialValues?: CreateTaskInput;
+  defaultEpic?: string;
   titleRef: RefObject<HTMLInputElement | null>;
   submitLabel: string;
   onSave: (input: CreateTaskInput) => SaveResult;
@@ -46,6 +47,7 @@ export function TaskForm({
   epics,
   assignees,
   initialValues,
+  defaultEpic,
   titleRef,
   submitLabel,
   onSave,
@@ -286,7 +288,7 @@ export function TaskForm({
                   aria-describedby={
                     errors.epic ? `${fieldId}-epic-error` : undefined
                   }
-                  defaultValue={initialValues?.epic ?? ""}
+                  defaultValue={initialValues?.epic ?? defaultEpic ?? ""}
                   className="select composer-control h-10 w-full rounded-xl border-base-300/80 bg-base-100 text-xs font-normal"
                 >
                   <option value="">No epic</option>

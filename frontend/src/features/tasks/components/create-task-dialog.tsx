@@ -8,6 +8,7 @@ import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schem
 import type { SaveResult } from "@/features/tasks/store/task-store";
 
 type CreateTaskDialogProps = {
+  defaultEpic?: string;
   epics: string[];
   assignees: string[];
   onCreate: (input: CreateTaskInput) => SaveResult;
@@ -15,6 +16,7 @@ type CreateTaskDialogProps = {
 };
 
 export function CreateTaskDialog({
+  defaultEpic,
   epics,
   assignees,
   onCreate,
@@ -48,6 +50,7 @@ export function CreateTaskDialog({
         description="Turn your next idea into a clear, actionable task."
       >
         <TaskForm
+          defaultEpic={defaultEpic}
           epics={epics}
           assignees={assignees}
           titleRef={titleRef}

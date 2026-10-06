@@ -60,6 +60,8 @@ function useWorkspaceStore() {
     restoreDeletedTask: store.restoreDeletedTask,
     updateTask: store.updateTask,
     createEpic: store.createEpic,
+    renameEpic: store.renameEpic,
+    deleteEpic: store.deleteEpic,
     addSubtask: store.addSubtask,
     setSubtaskCompleted: store.setSubtaskCompleted,
     reload: store.load,

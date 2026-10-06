@@ -10,6 +10,7 @@ import type { Task } from "@/features/tasks/types/task";
 import type { SaveResult } from "@/features/tasks/store/task-store";
 
 type EpicsDialogProps = {
+  triggerLabel?: string;
   epics: string[];
   tasks: Task[];
   disabled?: boolean;
@@ -17,6 +18,7 @@ type EpicsDialogProps = {
 };
 
 export function EpicsDialog({
+  triggerLabel = "Epics",
   epics,
   tasks,
   disabled,
@@ -77,7 +79,7 @@ export function EpicsDialog({
           disabled={disabled}
           className="btn btn-outline h-10 rounded-xl border-base-300 text-xs"
         >
-          Epics
+          {triggerLabel}
         </button>
       </Dialog.Trigger>
       <DialogPanel

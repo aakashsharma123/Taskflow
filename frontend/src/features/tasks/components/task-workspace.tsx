@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useWorkspace } from "@/features/workspace/components/workspace-provider";
-import { EpicsDialog } from "@/features/epics/components/epics-dialog";
 import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog";
 import { useTaskActions } from "./task-actions-provider";
 import { TaskFilterToolbar } from "./task-filters";
@@ -30,7 +29,6 @@ export function TaskWorkspace({
     createTask,
     moveTask,
     setPlacement,
-    createEpic,
     reload,
   } = useWorkspace();
   const boardRef = useRef<HTMLDivElement>(null);
@@ -99,12 +97,6 @@ export function TaskWorkspace({
         >
           {filteredTasks.length} of {eligibleTasks.length} tasks
         </p>
-        <EpicsDialog
-          epics={epics}
-          tasks={tasks}
-          disabled={!ready || Boolean(error)}
-          onCreate={createEpic}
-        />
         {mode !== "archive" && (
           <CreateTaskDialog
             epics={epics}
