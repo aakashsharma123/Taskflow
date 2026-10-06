@@ -59,6 +59,7 @@ export function TaskForm({
     const values = new FormData(form);
     const result = createTaskSchema({ epics, assignees }).safeParse({
       title: values.get("title"),
+      description: values.get("description"),
       status: values.get("status"),
       priority: values.get("priority"),
       epic: values.get("epic"),
@@ -111,6 +112,33 @@ export function TaskForm({
             placeholder="e.g. Design the project overview"
           />
           <FieldError id={`${fieldId}-title-error`} errors={errors.title} />
+        </div>
+        <div className="flex flex-col gap-2 text-xs font-medium">
+          <label htmlFor={`${fieldId}-description`}>Description</label>
+          <textarea
+            id={`${fieldId}-description`}
+            name="description"
+            rows={4}
+            defaultValue={initialValues?.description ?? ""}
+            aria-invalid={Boolean(errors.description)}
+            aria-describedby={
+              errors.description
+                ? `${fieldId}-description-error`
+                : `${fieldId}-description-hint`
+            }
+            className="textarea w-full resize-y rounded-xl border-base-300 text-sm font-normal"
+            placeholder="Add context, acceptance criteria, or helpful notes…"
+          />
+          <p
+            id={`${fieldId}-description-hint`}
+            className="font-normal text-base-content/60"
+          >
+            Optional · Plain text · Up to 5,000 characters.
+          </p>
+          <FieldError
+            id={`${fieldId}-description-error`}
+            errors={errors.description}
+          />
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="flex min-w-0 flex-col gap-2 text-xs font-medium">

@@ -68,3 +68,16 @@ test("rejects unavailable options while allowing an empty option list", () => {
     true,
   );
 });
+
+test("descriptions default to empty, trim notes, and reject oversized content", () => {
+  assert.equal(schema.parse(validTask).description, "");
+  assert.equal(
+    schema.parse({ ...validTask, description: "  Context\nCriteria  " })
+      .description,
+    "Context\nCriteria",
+  );
+  assert.equal(
+    schema.safeParse({ ...validTask, description: "a".repeat(5001) }).success,
+    false,
+  );
+});
