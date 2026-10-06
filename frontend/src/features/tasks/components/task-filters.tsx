@@ -1,4 +1,5 @@
 "use client";
+import type { Sprint } from "@/features/sprints/types/sprint";
 import { useId } from "react";
 import { taskColumns } from "@/features/tasks/constants/task-statuses";
 import {
@@ -50,12 +51,14 @@ export function TaskFilterToolbar({
   epics,
   assignees,
   labels,
+  sprints,
 }: {
   filters: TaskFilters;
   onChange: (filters: TaskFilters) => void;
   epics: string[];
   assignees: string[];
   labels: string[];
+  sprints: Sprint[];
 }) {
   return (
     <div className="mb-5 rounded-2xl border border-base-300/80 bg-base-100/70 p-4">
@@ -117,6 +120,19 @@ export function TaskFilterToolbar({
             : ""}
         </summary>
         <div className="mt-3 flex flex-wrap gap-3">
+          <FilterSelect
+            label="Sprint"
+            value={filters.sprint}
+            options={[
+              { value: "", label: "All sprints" },
+              { value: "none", label: "No sprint" },
+              ...sprints.map((sprint) => ({
+                value: String(sprint.id),
+                label: sprint.name,
+              })),
+            ]}
+            onChange={(sprint) => onChange({ ...filters, sprint })}
+          />
           <FilterSelect
             label="Label"
             value={filters.label}

@@ -33,6 +33,10 @@ export function useTaskStore(initialTasks: Task[]) {
   );
   return {
     ...snapshot,
+    createSprint: store.createSprint,
+    assignSprint: store.assignSprint,
+    startSprint: store.startSprint,
+    completeSprint: store.completeSprint,
     createTask: store.createTask,
     moveTask: store.moveTask,
     setPlacement: store.setPlacement,

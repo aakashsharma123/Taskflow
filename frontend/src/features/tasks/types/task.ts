@@ -24,4 +24,5 @@ export type Task = {
   subtasks: Subtask[];
   archived: boolean;
   placement: TaskPlacement;
+  sprintId: number | null;
 };

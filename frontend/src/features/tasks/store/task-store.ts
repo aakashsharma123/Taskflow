@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  createSprintSchema,
+  sprintsSchema,
+  type CreateSprintInput,
+} from "@/features/sprints/schemas/sprint-schema";
+import type { Sprint } from "@/features/sprints/types/sprint";
 import { recordTaskActivity, taskActivitySchema } from "./task-activity";
 import {
   taskLabelsSchema,
@@ -31,6 +37,7 @@ const subtaskSchema = z
 const savedTaskSchema: z.ZodType<Task> = z.object({
   id: idSchema,
   archived: z.boolean().default(false),
+  sprintId: idSchema.nullable().default(null),
   placement: z.enum(["board", "backlog"]).default("board"),
   activity: taskActivitySchema,
   title: taskTitleSchema,
@@ -50,6 +57,7 @@ const savedTaskSchema: z.ZodType<Task> = z.object({
 });
 const workspaceSchema = z.object({
   version: z.literal(1),
+  sprints: sprintsSchema,
   history: workspaceHistorySchema.default([]),
   removedTasks: z.array(savedTaskSchema).default([]),
   tasks: z
@@ -71,6 +79,7 @@ type Snapshot = {
   removedTasks: Task[];
   history: DailySummary[];
   epics: string[];
+  sprints: Sprint[];
   ready: boolean;
   error: string | null;
 };
@@ -92,6 +101,7 @@ export function createTaskStore(
     removedTasks: [],
     history: [],
     epics: taskEpics(seed),
+    sprints: [],
     ready: false,
     error: null,
   };
@@ -116,10 +126,31 @@ export function createTaskStore(
         )
       )
         throw new Error("Unknown epic reference");
+      const sprints = saved?.sprints ?? [];
+      if (
+        allTasks.some(
+          (task) =>
+            task.sprintId !== null &&
+            !sprints.some((sprint) => sprint.id === task.sprintId),
+        )
+      )
+        throw new Error("Unknown sprint reference");
+      if (
+        tasks.some(
+          (task) =>
+            task.sprintId !== null &&
+            (task.archived ||
+              (sprints.find((sprint) => sprint.id === task.sprintId)?.status ===
+                "active" &&
+                task.placement !== "board")),
+        )
+      )
+        throw new Error("Invalid sprint membership");
       snapshot = {
         tasks,
         removedTasks,
         epics,
+        sprints,
         history: saved?.history ?? [],
         ready: true,
         error: null,
@@ -149,6 +180,7 @@ export function createTaskStore(
     tasks: Task[],
     epics = snapshot.epics,
     removedTasks = snapshot.removedTasks,
+    sprints = snapshot.sprints,
   ): SaveResult {
     try {
       const timestamp = now().toISOString();
@@ -177,12 +209,20 @@ export function createTaskStore(
       );
       getStorage().setItem(
         TASK_STORAGE_KEY,
-        JSON.stringify({ version: 1, tasks, epics, removedTasks, history }),
+        JSON.stringify({
+          version: 1,
+          tasks,
+          epics,
+          removedTasks,
+          history,
+          sprints,
+        }),
       );
       snapshot = {
         tasks,
         removedTasks,
         epics,
+        sprints,
         history,
         ready: true,
         error: null,
@@ -234,11 +274,131 @@ export function createTaskStore(
       };
     },
     load,
+    createSprint(input: CreateSprintInput): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const validated = createSprintSchema.safeParse(input);
+      if (!validated.success)
+        return { ok: false, error: validated.error.issues[0].message };
+      if (
+        snapshot.sprints.some(
+          (sprint) =>
+            sprint.name.toLowerCase() === validated.data.name.toLowerCase(),
+        )
+      )
+        return { ok: false, error: "Choose a unique sprint name." };
+      const id = nextId(snapshot.sprints);
+      if (!Number.isSafeInteger(id))
+        return { ok: false, error: "A sprint ID could not be assigned." };
+      return save(snapshot.tasks, snapshot.epics, snapshot.removedTasks, [
+        ...snapshot.sprints,
+        { ...validated.data, id, status: "planned", summary: null },
+      ]);
+    },
+    assignSprint(taskId: number, sprintId: number | null): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === taskId);
+      if (!task || task.archived) return missingTask;
+      const sprint = snapshot.sprints.find((sprint) => sprint.id === sprintId);
+      if (sprintId !== null && (!sprint || sprint.status === "completed"))
+        return { ok: false, error: "Choose a planned or active sprint." };
+      if (
+        task.sprintId !== null &&
+        snapshot.sprints.some(
+          (sprint) =>
+            sprint.id === task.sprintId && sprint.status === "completed",
+        )
+      )
+        return {
+          ok: false,
+          error: "Reopen this completed task before changing its sprint.",
+        };
+      return saveTask({
+        ...task,
+        sprintId,
+        placement: sprint?.status === "active" ? "board" : task.placement,
+      });
+    },
+    startSprint(id: number): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const sprint = snapshot.sprints.find((sprint) => sprint.id === id);
+      if (!sprint || sprint.status !== "planned")
+        return { ok: false, error: "Only a planned sprint can be started." };
+      if (snapshot.sprints.some((sprint) => sprint.status === "active"))
+        return {
+          ok: false,
+          error: "Complete the active sprint before starting another.",
+        };
+      if (
+        !snapshot.tasks.some((task) => task.sprintId === id && !task.archived)
+      )
+        return {
+          ok: false,
+          error: "Add at least one task before starting this sprint.",
+        };
+      return save(
+        snapshot.tasks.map((task) =>
+          task.sprintId === id ? { ...task, placement: "board" } : task,
+        ),
+        snapshot.epics,
+        snapshot.removedTasks,
+        snapshot.sprints.map((sprint) =>
+          sprint.id === id ? { ...sprint, status: "active" } : sprint,
+        ),
+      );
+    },
+    completeSprint(id: number): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const sprint = snapshot.sprints.find((sprint) => sprint.id === id);
+      if (!sprint || sprint.status !== "active")
+        return { ok: false, error: "Only the active sprint can be completed." };
+      const members = snapshot.tasks.filter(
+        (task) => task.sprintId === id && !task.archived,
+      );
+      const completed = members.filter((task) => task.status === "done").length;
+      const tasks = snapshot.tasks.map((task) =>
+        task.sprintId === id && task.status !== "done"
+          ? { ...task, sprintId: null, placement: "backlog" as const }
+          : task,
+      );
+      return save(
+        tasks,
+        snapshot.epics,
+        snapshot.removedTasks,
+        snapshot.sprints.map((sprint) =>
+          sprint.id === id
+            ? {
+                ...sprint,
+                status: "completed",
+                summary: {
+                  total: members.length,
+                  completed,
+                  carried: members.length - completed,
+                },
+              }
+            : sprint,
+        ),
+      );
+    },
     setPlacement(id: number, placement: TaskPlacement): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
       const task = snapshot.tasks.find((task) => task.id === id);
       if (!task || task.archived) return missingTask;
+      if (
+        placement === "backlog" &&
+        snapshot.sprints.some(
+          (sprint) => sprint.id === task.sprintId && sprint.status === "active",
+        )
+      )
+        return {
+          ok: false,
+          error:
+            "Remove this task from its active sprint before moving it to Backlog.",
+        };
       return saveTask({ ...task, placement });
     },
     setArchived(id: number, archived: boolean): SaveResult {
@@ -246,7 +406,11 @@ export function createTaskStore(
       if (blocked) return blocked;
       const task = snapshot.tasks.find((task) => task.id === id);
       if (!task) return missingTask;
-      return saveTask({ ...task, archived });
+      return saveTask({
+        ...task,
+        archived,
+        sprintId: archived ? null : task.sprintId,
+      });
     },
     deleteTask(id: number): SaveResult {
       const blocked = prepare();
@@ -265,7 +429,25 @@ export function createTaskStore(
       const task = snapshot.removedTasks.find((task) => task.id === id);
       if (!task) return missingTask;
       return save(
-        [task, ...snapshot.tasks],
+        [
+          {
+            ...task,
+            placement: snapshot.sprints.some(
+              (sprint) =>
+                sprint.id === task.sprintId && sprint.status === "active",
+            )
+              ? "board"
+              : task.placement,
+            sprintId:
+              snapshot.sprints.some(
+                (sprint) =>
+                  sprint.id === task.sprintId && sprint.status === "completed",
+              ) && task.status !== "done"
+                ? null
+                : task.sprintId,
+          },
+          ...snapshot.tasks,
+        ],
         snapshot.epics,
         snapshot.removedTasks.filter((task) => task.id !== id),
       );
@@ -276,7 +458,18 @@ export function createTaskStore(
       const task = snapshot.tasks.find((task) => task.id === id);
       if (!task) return missingTask;
       if (task.status === status) return { ok: true };
-      return saveTask({ ...task, status });
+      return saveTask({
+        ...task,
+        status,
+        sprintId:
+          status !== "done" &&
+          snapshot.sprints.some(
+            (sprint) =>
+              sprint.id === task.sprintId && sprint.status === "completed",
+          )
+            ? null
+            : task.sprintId,
+      });
     },
     createTask(
       input: CreateTaskInput,
@@ -295,6 +488,7 @@ export function createTaskStore(
           ...validated.data,
           id,
           activity: [],
+          sprintId: null,
           subtasks: [],
           archived: false,
           placement,
@@ -310,7 +504,18 @@ export function createTaskStore(
       const validated = validateTask(input);
       if (!validated.success)
         return { ok: false, error: validated.error.issues[0].message };
-      return saveTask({ ...task, ...validated.data });
+      return saveTask({
+        ...task,
+        ...validated.data,
+        sprintId:
+          validated.data.status !== "done" &&
+          snapshot.sprints.some(
+            (sprint) =>
+              sprint.id === task.sprintId && sprint.status === "completed",
+          )
+            ? null
+            : task.sprintId,
+      });
     },
     createEpic(name: string): SaveResult {
       const blocked = prepare();

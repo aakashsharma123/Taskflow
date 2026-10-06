@@ -9,6 +9,7 @@ export type TaskFilters = {
   status: string;
   label: string;
   due: string;
+  sprint: string;
   sort: TaskSort;
 };
 export const defaultTaskFilters: TaskFilters = {
@@ -19,6 +20,7 @@ export const defaultTaskFilters: TaskFilters = {
   status: "",
   label: "",
   due: "",
+  sprint: "",
   sort: "newest",
 };
 export const hasTaskFilters = (filters: TaskFilters) =>
@@ -30,6 +32,7 @@ export const hasTaskFilters = (filters: TaskFilters) =>
     filters.status ||
     filters.label ||
     filters.due ||
+    filters.sprint ||
     filters.sort !== "newest",
   );
 const priorityRank = { high: 0, medium: 1, low: 2 };
@@ -52,6 +55,10 @@ export function filterTasks(
             : task.assignee === filters.assignee)) &&
         (!filters.priority || task.priority === filters.priority) &&
         (!filters.status || task.status === filters.status) &&
+        (!filters.sprint ||
+          (filters.sprint === "none"
+            ? task.sprintId === null
+            : task.sprintId === Number(filters.sprint))) &&
         (!filters.label || task.labels.includes(filters.label)) &&
         (!filters.due ||
           (filters.due === "overdue"

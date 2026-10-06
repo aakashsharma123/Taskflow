@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/backlog", label: "Backlog", icon: "backlog" },
+  { href: "/sprints", label: "Sprints", icon: "sprints" },
   { href: "/tasks", label: "Board", icon: "board" },
   { href: "/tasks/archive", label: "Archive", icon: "archive" },
 ];
@@ -45,6 +46,11 @@ function NavigationIcon({ kind }: { kind: string }) {
           <rect x="14" y="3" width="7" height="7" rx="1.5" />
           <rect x="3" y="14" width="7" height="7" rx="1.5" />
           <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </>
+      ) : kind === "sprints" ? (
+        <>
+          <circle cx="12" cy="13" r="8" />
+          <path d="M9 2h6M12 9v4l3 2" />
         </>
       ) : kind === "board" ? (
         <>
