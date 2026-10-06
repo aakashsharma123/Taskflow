@@ -73,3 +73,7 @@ Schema and store tests use Node’s test runner through tsx to run TypeScript.
 
 Browser persistence lives in `features/tasks/store/task-store.ts`; the React
 subscription lives in `features/tasks/hooks/use-task-store.ts`.
+
+Move cards between columns using the drag handle. dnd-kit supports pointer, touch,
+and keyboard input: Space starts a drag, arrows move it, Space drops it, and Escape
+cancels. The status field in task details is also available for direct changes.

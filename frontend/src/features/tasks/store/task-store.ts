@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Task } from "@/features/tasks/types/task";
+import type { Task, TaskStatus } from "@/features/tasks/types/task";
 import {
   createTaskSchema,
   taskTitleSchema,
@@ -155,6 +155,14 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
       };
     },
     load,
+    moveTask(id: number, status: TaskStatus): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === id);
+      if (!task) return missingTask;
+      if (task.status === status) return { ok: true };
+      return saveTask({ ...task, status });
+    },
     createTask(input: CreateTaskInput): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;

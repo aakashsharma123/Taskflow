@@ -34,6 +34,7 @@ export function useTaskStore(initialTasks: Task[]) {
   return {
     ...snapshot,
     createTask: store.createTask,
+    moveTask: store.moveTask,
     updateTask: store.updateTask,
     createEpic: store.createEpic,
     addSubtask: store.addSubtask,

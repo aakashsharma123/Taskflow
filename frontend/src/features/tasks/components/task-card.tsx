@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Task } from "@/features/tasks/types/task";
 
 const epicStyles: Record<string, string> = {
@@ -12,7 +13,15 @@ const priorityStyles = {
   low: "bg-slate-100 text-slate-700",
 };
 
-export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
+export function TaskCard({
+  task,
+  onOpen,
+  dragHandle,
+}: {
+  task: Task;
+  onOpen: () => void;
+  dragHandle?: ReactNode;
+}) {
   const completedSubtasks = task.subtasks.filter(
     (subtask) => subtask.completed,
   ).length;
@@ -32,22 +41,25 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
           />
           ORB-{task.id}
         </span>
-        {task.status === "done" && (
-          <span className="flex items-center gap-1 text-[10px] font-medium text-teal-800">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              className="size-3.5"
-            >
-              <circle cx="8" cy="8" r="6" />
-              <path d="m5 8 2 2 4-4" />
-            </svg>
-            Done
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          {task.status === "done" && (
+            <span className="flex items-center gap-1 text-[10px] font-medium text-teal-800">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="size-3.5"
+              >
+                <circle cx="8" cy="8" r="6" />
+                <path d="m5 8 2 2 4-4" />
+              </svg>
+              Done
+            </span>
+          )}
+          {dragHandle}
+        </div>
       </div>
       <h3 className="min-h-12 text-[13px] leading-6 font-semibold tracking-[-0.01em] [overflow-wrap:anywhere]">
         <button

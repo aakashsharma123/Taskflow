@@ -216,3 +216,18 @@ test("failed subtask writes leave completion and draft data unchanged", () => {
   assert.equal(store.getSnapshot().tasks[0].subtasks[0].completed, false);
   assert.equal(store.getSnapshot().tasks[0].subtasks.length, 1);
 });
+
+test("moving a task changes only its status and survives reload", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.moveTask(9, "done").ok, true);
+  assert.deepEqual(store.getSnapshot().tasks[0], {
+    ...seed[0],
+    status: "done",
+  });
+  const restored = createTaskStore(seed, () => storage);
+  restored.load();
+  assert.equal(restored.getSnapshot().tasks[0].status, "done");
+  assert.equal(store.moveTask(999, "done").ok, false);
+});
