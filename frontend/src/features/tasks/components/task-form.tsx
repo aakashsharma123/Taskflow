@@ -60,6 +60,11 @@ export function TaskForm({
     const result = createTaskSchema({ epics, assignees }).safeParse({
       title: values.get("title"),
       description: values.get("description"),
+      labels: String(values.get("labels") ?? "")
+        .split(",")
+        .map((label) => label.trim())
+        .filter(Boolean),
+      dueDate: values.get("dueDate") || null,
       status: values.get("status"),
       priority: values.get("priority"),
       epic: values.get("epic"),
@@ -224,6 +229,50 @@ export function TaskForm({
             <FieldError
               id={`${fieldId}-assignee-error`}
               errors={errors.assignee}
+            />
+          </div>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-2 text-xs font-medium">
+            <label htmlFor={`${fieldId}-labels`}>Labels</label>
+            <input
+              id={`${fieldId}-labels`}
+              name="labels"
+              type="text"
+              defaultValue={initialValues?.labels.join(", ") ?? ""}
+              className="input h-11 w-full rounded-xl border-base-300 text-sm font-normal"
+              placeholder="design, accessibility"
+              aria-invalid={Boolean(errors.labels)}
+              aria-describedby={
+                errors.labels
+                  ? `${fieldId}-labels-error`
+                  : `${fieldId}-labels-hint`
+              }
+            />
+            <p
+              id={`${fieldId}-labels-hint`}
+              className="font-normal text-base-content/60"
+            >
+              Separate with commas · Up to five labels.
+            </p>
+            <FieldError id={`${fieldId}-labels-error`} errors={errors.labels} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-2 text-xs font-medium">
+            <label htmlFor={`${fieldId}-dueDate`}>Due date</label>
+            <input
+              id={`${fieldId}-dueDate`}
+              name="dueDate"
+              type="date"
+              defaultValue={initialValues?.dueDate ?? ""}
+              className="input h-11 w-full min-w-0 rounded-xl border-base-300 text-sm font-normal"
+              aria-invalid={Boolean(errors.dueDate)}
+              aria-describedby={
+                errors.dueDate ? `${fieldId}-dueDate-error` : undefined
+              }
+            />
+            <FieldError
+              id={`${fieldId}-dueDate-error`}
+              errors={errors.dueDate}
             />
           </div>
         </div>

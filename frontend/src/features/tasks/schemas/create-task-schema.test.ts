@@ -81,3 +81,25 @@ test("descriptions default to empty, trim notes, and reject oversized content", 
     false,
   );
 });
+
+test("labels and dates validate unique bounded names and real calendar dates", () => {
+  assert.deepEqual(schema.parse(validTask).labels, []);
+  assert.equal(schema.parse(validTask).dueDate, null);
+  assert.deepEqual(
+    schema.parse({
+      ...validTask,
+      labels: ["  design  "],
+      dueDate: "2028-02-29",
+    }).labels,
+    ["design"],
+  );
+  for (const labels of [
+    ["a", "A"],
+    [""],
+    ["x".repeat(25)],
+    ["a", "b", "c", "d", "e", "f"],
+  ])
+    assert.equal(schema.safeParse({ ...validTask, labels }).success, false);
+  for (const dueDate of ["2026-02-29", "2026-13-01", "bad"])
+    assert.equal(schema.safeParse({ ...validTask, dueDate }).success, false);
+});

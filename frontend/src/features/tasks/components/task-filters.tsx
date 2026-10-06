@@ -49,11 +49,13 @@ export function TaskFilterToolbar({
   onChange,
   epics,
   assignees,
+  labels,
 }: {
   filters: TaskFilters;
   onChange: (filters: TaskFilters) => void;
   epics: string[];
   assignees: string[];
+  labels: string[];
 }) {
   return (
     <div className="mb-5 rounded-2xl border border-base-300/80 bg-base-100/70 p-4">
@@ -89,6 +91,7 @@ export function TaskFilterToolbar({
             { value: "oldest", label: "Oldest first" },
             { value: "priority", label: "Highest priority" },
             { value: "title", label: "Title A–Z" },
+            { value: "dueDate", label: "Due date" },
           ]}
           onChange={(sort) => onChange({ ...filters, sort })}
         />
@@ -105,11 +108,35 @@ export function TaskFilterToolbar({
       <details className="mt-4">
         <summary className="w-fit cursor-pointer py-1 text-xs font-medium">
           More filters
-          {filters.assignee || filters.priority || filters.status
+          {filters.assignee ||
+          filters.priority ||
+          filters.status ||
+          filters.label ||
+          filters.due
             ? " · active"
             : ""}
         </summary>
         <div className="mt-3 flex flex-wrap gap-3">
+          <FilterSelect
+            label="Label"
+            value={filters.label}
+            options={[
+              { value: "", label: "All labels" },
+              ...labels.map((label) => ({ value: label, label })),
+            ]}
+            onChange={(label) => onChange({ ...filters, label })}
+          />
+          <FilterSelect
+            label="Due"
+            value={filters.due}
+            options={[
+              { value: "", label: "Any date" },
+              { value: "overdue", label: "Overdue" },
+              { value: "today", label: "Due today" },
+              { value: "none", label: "No date" },
+            ]}
+            onChange={(due) => onChange({ ...filters, due })}
+          />
           <FilterSelect
             label="Assignee"
             value={filters.assignee}

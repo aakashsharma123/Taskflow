@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { taskLabelsSchema, taskDueDateSchema } from "./task-metadata-schema";
 
 type TaskOptions = {
   epics: readonly string[];
@@ -23,6 +24,8 @@ export function createTaskSchema({ epics, assignees }: TaskOptions) {
   return z.object({
     title: taskTitleSchema,
     description: taskDescriptionSchema,
+    labels: taskLabelsSchema,
+    dueDate: taskDueDateSchema,
     status: z.enum(["todo", "in_progress", "in_review", "done"], {
       error: "Choose a valid status.",
     }),
