@@ -5,13 +5,18 @@ import { z } from "zod";
 import {
   createTaskSchema,
   type CreateTaskFieldErrors,
+  type CreateTaskInput,
 } from "@/features/tasks/schemas/create-task-schema";
 import { Dialog } from "@ark-ui/react/dialog";
 import { Portal } from "@ark-ui/react/portal";
 
+import type { SaveResult } from "@/features/tasks/store/task-store";
+
 type CreateTaskDialogProps = {
   epics: string[];
   assignees: string[];
+  onCreate: (input: CreateTaskInput) => SaveResult;
+  disabled?: boolean;
 };
 
 function FieldError({
@@ -29,12 +34,17 @@ function FieldError({
   );
 }
 
-export function CreateTaskDialog({ epics, assignees }: CreateTaskDialogProps) {
+export function CreateTaskDialog({
+  epics,
+  assignees,
+  onCreate,
+  disabled,
+}: CreateTaskDialogProps) {
   const titleRef = useRef<HTMLInputElement>(null);
-  const previewNoteId = useId();
   const fieldId = useId();
   const [errors, setErrors] = useState<CreateTaskFieldErrors>({});
-  const [validationMessage, setValidationMessage] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [open, setOpen] = useState(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,7 +61,7 @@ export function CreateTaskDialog({ epics, assignees }: CreateTaskDialogProps) {
     if (!result.success) {
       const fieldErrors = z.flattenError(result.error).fieldErrors;
       setErrors(fieldErrors);
-      setValidationMessage("");
+      setSaveError("");
       const firstInvalidField = Object.keys(fieldErrors)[0];
       const control = firstInvalidField
         ? form.elements.namedItem(firstInvalidField)
@@ -61,18 +71,23 @@ export function CreateTaskDialog({ epics, assignees }: CreateTaskDialogProps) {
     }
 
     setErrors({});
-    if (titleRef.current) titleRef.current.value = result.data.title;
-    setValidationMessage(
-      "Details are valid. Your task has not been saved yet.",
-    );
+    const saved = onCreate(result.data);
+    if (!saved.ok) {
+      setSaveError(saved.error);
+      return;
+    }
+    setSaveError("");
+    setOpen(false);
   }
 
   return (
     <Dialog.Root
+      open={open}
       onOpenChange={({ open }) => {
+        setOpen(open);
         if (!open) {
           setErrors({});
-          setValidationMessage("");
+          setSaveError("");
         }
       }}
       initialFocusEl={() => titleRef.current}
@@ -83,6 +98,7 @@ export function CreateTaskDialog({ epics, assignees }: CreateTaskDialogProps) {
       <Dialog.Trigger asChild>
         <button
           type="button"
+          disabled={disabled}
           className="btn btn-primary h-10 rounded-xl px-4 text-xs"
         >
           <span aria-hidden="true" className="text-lg font-normal">
@@ -135,7 +151,7 @@ export function CreateTaskDialog({ epics, assignees }: CreateTaskDialogProps) {
               aria-label="New task details"
               noValidate
               onSubmit={handleSubmit}
-              onChange={() => setValidationMessage("")}
+              onChange={() => setSaveError("")}
             >
               <div className="space-y-5 overflow-y-auto px-6 py-5">
                 <div className="flex flex-col gap-2 text-xs font-medium">
@@ -259,15 +275,14 @@ export function CreateTaskDialog({ epics, assignees }: CreateTaskDialogProps) {
                     Review the highlighted fields, then check again.
                   </p>
                 )}
-                <p role="status" className="text-xs leading-6 text-teal-800">
-                  {validationMessage}
-                </p>
-                <p
-                  id={previewNoteId}
-                  className="rounded-xl bg-workspace px-3 py-2.5 text-xs leading-6 text-base-content/75"
-                >
-                  Check your task details. Tasks cannot be saved yet.
-                </p>
+                {saveError && (
+                  <p
+                    role="alert"
+                    className="rounded-xl bg-rose-50 px-3 py-2.5 text-xs leading-6 text-rose-800"
+                  >
+                    {saveError}
+                  </p>
+                )}
               </div>
               <div className="flex shrink-0 justify-end gap-3 border-t border-base-300/70 px-6 py-4">
                 <Dialog.CloseTrigger asChild>
@@ -280,10 +295,9 @@ export function CreateTaskDialog({ epics, assignees }: CreateTaskDialogProps) {
                 </Dialog.CloseTrigger>
                 <button
                   type="submit"
-                  aria-describedby={previewNoteId}
                   className="btn btn-primary h-11 rounded-xl text-xs"
                 >
-                  Check details
+                  Create task
                 </button>
               </div>
             </form>
