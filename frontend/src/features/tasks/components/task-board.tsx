@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog";
 import { TaskCard } from "@/features/tasks/components/task-card";
 import type { Task, TaskStatus } from "@/features/tasks/types/task";
 
@@ -16,6 +17,9 @@ export function TaskBoard({ tasks }: { tasks: Task[] }) {
   const [epic, setEpic] = useState("");
   const epics = [
     ...new Set(tasks.flatMap((task) => (task.epic ? [task.epic] : []))),
+  ];
+  const assignees = [
+    ...new Set(tasks.flatMap((task) => (task.assignee ? [task.assignee] : []))),
   ];
   const query = search.trim().toLowerCase();
   const filteredTasks = tasks.filter(
@@ -80,6 +84,7 @@ export function TaskBoard({ tasks }: { tasks: Task[] }) {
         >
           {filteredTasks.length} of {tasks.length} tasks
         </p>
+        <CreateTaskDialog epics={epics} assignees={assignees} />
       </div>
       <div
         role="region"
