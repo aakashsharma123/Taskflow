@@ -14,6 +14,16 @@ function labelColor(label: string) {
   );
   return colors[hash % colors.length];
 }
+export function TaskLabel({ label }: { label: string }) {
+  return (
+    <span
+      className={`inline-flex max-w-full rounded-full px-2.5 py-1 text-[10px] font-medium [overflow-wrap:anywhere] ${labelColor(label)}`}
+    >
+      {label}
+    </span>
+  );
+}
+
 export function TaskMetadata({ task }: { task: Task }) {
   const overdue = isOverdue(task);
   return (
@@ -24,11 +34,8 @@ export function TaskMetadata({ task }: { task: Task }) {
           className="mb-3 flex flex-wrap gap-1.5"
         >
           {task.labels.map((label) => (
-            <li
-              key={label}
-              className={`max-w-full rounded-full px-2 py-1 text-[10px] font-medium [overflow-wrap:anywhere] ${labelColor(label)}`}
-            >
-              {label}
+            <li key={label} className="min-w-0 max-w-full">
+              <TaskLabel label={label} />
             </li>
           ))}
         </ul>

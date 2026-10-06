@@ -88,3 +88,14 @@ body {
     min-height: 44px;
   }
 }
+
+/* Keep native controls consistent inside the task and epic composers. */
+.composer-control:focus,
+.composer-control:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 65%, transparent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.composer-control::placeholder {
+  color: color-mix(in srgb, var(--color-base-content) 65%, transparent);
+}
