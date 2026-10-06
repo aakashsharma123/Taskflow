@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useDroppable } from "@dnd-kit/react";
-import type { TaskStatus } from "@/features/tasks/schemas/types/task";
+import type { TaskStatus } from "@/features/tasks/types/task";
 
 export function BoardColumn({
   status,

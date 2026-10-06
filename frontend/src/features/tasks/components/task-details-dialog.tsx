@@ -7,7 +7,7 @@ import { SubtaskList } from "@/features/tasks/components/subtask-list";
 import { TaskPlacementAction } from "./task-placement-action";
 import { TaskLifecycleActions } from "./task-lifecycle-actions";
 import { TaskForm } from "@/features/tasks/components/task-form";
-import type { Task, TaskPlacement } from "@/features/tasks/schemas/types/task";
+import type { Task, TaskPlacement } from "@/features/tasks/types/task";
 import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schema";
 import type { SaveResult } from "@/features/tasks/store/task-store";
 

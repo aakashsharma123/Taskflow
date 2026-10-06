@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createTaskStore, TASK_STORAGE_KEY } from "./task-store";
-import type { Task } from "../schemas/types/task";
+import type { Task } from "../types/task";
 
 const seed: Task[] = [
   {

@@ -8,7 +8,7 @@ import type {
   Task,
   TaskStatus,
   TaskPlacement,
-} from "@/features/tasks/schemas/types/task";
+} from "@/features/tasks/types/task";
 import {
   createTaskSchema,
   taskTitleSchema,

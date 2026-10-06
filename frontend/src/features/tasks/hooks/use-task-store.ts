@@ -5,7 +5,7 @@ import {
   createTaskStore,
   TASK_STORAGE_KEY,
 } from "@/features/tasks/store/task-store";
-import type { Task } from "@/features/tasks/schemas/types/task";
+import type { Task } from "@/features/tasks/types/task";
 
 export function useTaskStore(initialTasks: Task[]) {
   const [store] = useState(() =>

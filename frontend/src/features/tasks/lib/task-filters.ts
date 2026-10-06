@@ -1,4 +1,4 @@
-import type { Task } from "@/features/tasks/schemas/types/task";
+import type { Task } from "@/features/tasks/types/task";
 export type TaskSort = "newest" | "oldest" | "priority" | "title";
 export type TaskFilters = {
   search: string;

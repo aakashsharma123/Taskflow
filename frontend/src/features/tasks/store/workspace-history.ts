@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Task } from "@/features/tasks/schemas/types/task";
+import type { Task } from "@/features/tasks/types/task";
 const countSchema = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const dailySummarySchema = z
   .object({ date: z.iso.date(), total: countSchema, completed: countSchema })

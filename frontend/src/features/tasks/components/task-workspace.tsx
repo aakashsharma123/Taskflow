@@ -14,7 +14,7 @@ import {
 import { KanbanBoard } from "./kanban-board";
 import { TaskList } from "./task-list";
 import { taskColumns } from "@/features/tasks/constants/task-statuses";
-import type { Task } from "@/features/tasks/schemas/types/task";
+import type { Task } from "@/features/tasks/types/task";
 
 export function TaskWorkspace({
   tasks: initialTasks,

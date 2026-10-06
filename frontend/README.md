@@ -57,7 +57,8 @@ The existing backend uses a different task contract and is unchanged.
   filters, dialogs and the board/list views.
 - `src/features/tasks/components/kanban-board.tsx`: drag/drop presentation.
 - `src/features/tasks/components/task-form.tsx`: shared create/edit form.
-- `src/features/tasks/schemas/`: form rules and the task type contract in `types/`.
+- `src/features/tasks/schemas/`: Zod validation rules.
+- `src/features/tasks/types/`: task, status, placement and subtask TypeScript types.
 - `src/features/tasks/store/`: validated persistence, task operations and history.
 - `src/features/tasks/hooks/`: React subscription to the task store.
 - `src/features/tasks/lib/`: pure filtering/sorting rules and tests.

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
-import type { Task } from "@/features/tasks/schemas/types/task";
+import type { Task } from "@/features/tasks/types/task";
 import { summarizeProject } from "@/features/dashboard/lib/project-summary";
 import { CompletionTrend } from "./completion-trend";
 import { EpicProgress } from "./epic-progress";

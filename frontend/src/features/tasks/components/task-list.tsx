@@ -1,5 +1,5 @@
 import { TaskCard } from "./task-card";
-import type { Task } from "@/features/tasks/schemas/types/task";
+import type { Task } from "@/features/tasks/types/task";
 export function TaskList({
   tasks,
   mode,
