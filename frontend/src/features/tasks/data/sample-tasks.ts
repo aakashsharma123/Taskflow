@@ -106,6 +106,7 @@ const taskFixtures = [
   | "description"
   | "labels"
   | "dueDate"
+  | "comments"
   | "activity"
   | "sprintId"
 >[];
@@ -113,6 +114,7 @@ const taskFixtures = [
 export const sampleTasks: Task[] = taskFixtures.map((task) => ({
   ...task,
   activity: [],
+  comments: [],
   description: "",
   labels: [],
   dueDate: null,

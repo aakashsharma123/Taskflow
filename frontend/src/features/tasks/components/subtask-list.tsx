@@ -1,5 +1,6 @@
 "use client";
 
+import { useWorkspace } from "@/features/workspace/components/workspace-provider";
 import { useId, useRef, useState } from "react";
 import { subtaskTitleSchema } from "@/features/tasks/schemas/subtask-schema";
 import type { Task } from "@/features/tasks/types/task";
@@ -16,6 +17,10 @@ type SubtaskListProps = {
 };
 
 export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
+  const { renameSubtask, deleteSubtask } = useWorkspace();
+  const [editing, setEditing] = useState<number | null>(null);
+  const [draft, setDraft] = useState("");
+  const [removing, setRemoving] = useState<number | null>(null);
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
@@ -69,28 +74,133 @@ export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
               key={subtask.id}
               className="rounded-xl border border-base-300/60 bg-base-100 px-3 py-2"
             >
-              <label className="flex min-h-8 cursor-pointer items-center gap-3 text-xs leading-5">
-                <input
-                  type="checkbox"
-                  checked={subtask.completed}
-                  className="checkbox checkbox-primary checkbox-sm shrink-0"
-                  onChange={(event) => {
-                    const result = onToggle(
-                      task.id,
-                      subtask.id,
-                      event.target.checked,
-                    );
-                    setError(result.ok ? "" : result.error);
-                    setFieldInvalid(false);
-                    setNotice(result.ok ? "Subtask updated and saved." : "");
-                  }}
-                />
-                <span
-                  className={`min-w-0 [overflow-wrap:anywhere] ${subtask.completed ? "text-base-content/65 line-through" : "text-base-content"}`}
-                >
-                  {subtask.title}
-                </span>
-              </label>
+              {editing === subtask.id ? (
+                <div>
+                  <label className="text-xs font-medium">
+                    Edit subtask
+                    <input
+                      autoFocus
+                      value={draft}
+                      maxLength={120}
+                      onChange={(event) => {
+                        setDraft(event.target.value);
+                        setError("");
+                      }}
+                      className="input mt-2 w-full rounded-xl"
+                    />
+                  </label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        const result = renameSubtask(
+                          task.id,
+                          subtask.id,
+                          draft,
+                        );
+                        setError(result.ok ? "" : result.error);
+                        if (result.ok) {
+                          setEditing(null);
+                          setNotice("Subtask renamed.");
+                          inputRef.current?.focus();
+                        }
+                      }}
+                    >
+                      Save subtask
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        setEditing(null);
+                        inputRef.current?.focus();
+                      }}
+                    >
+                      Cancel edit
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <label className="flex min-h-8 cursor-pointer items-center gap-3 text-xs leading-5">
+                    <input
+                      type="checkbox"
+                      checked={subtask.completed}
+                      className="checkbox checkbox-primary checkbox-sm shrink-0"
+                      onChange={(event) => {
+                        const result = onToggle(
+                          task.id,
+                          subtask.id,
+                          event.target.checked,
+                        );
+                        setError(result.ok ? "" : result.error);
+                        setFieldInvalid(false);
+                        setNotice(
+                          result.ok ? "Subtask updated and saved." : "",
+                        );
+                      }}
+                    />
+                    <span
+                      className={`min-w-0 [overflow-wrap:anywhere] ${subtask.completed ? "text-base-content/65 line-through" : "text-base-content"}`}
+                    >
+                      {subtask.title}
+                    </span>
+                  </label>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {removing === subtask.id ? (
+                      <>
+                        <p className="w-full text-[11px] leading-6">
+                          Remove this subtask?
+                        </p>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm text-xs"
+                          onClick={() => setRemoving(null)}
+                        >
+                          Keep subtask
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm text-xs text-rose-800"
+                          onClick={() => {
+                            const result = deleteSubtask(task.id, subtask.id);
+                            setError(result.ok ? "" : result.error);
+                            if (result.ok) {
+                              setRemoving(null);
+                              setNotice("Subtask removed.");
+                              inputRef.current?.focus();
+                            }
+                          }}
+                        >
+                          Confirm removal
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm text-[11px]"
+                          onClick={() => {
+                            setEditing(subtask.id);
+                            setDraft(subtask.title);
+                            setError("");
+                          }}
+                        >
+                          Rename
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm text-[11px]"
+                          onClick={() => setRemoving(subtask.id)}
+                        >
+                          Remove
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </li>
           ))}
         </ul>
@@ -111,6 +221,8 @@ export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
           onChange={(event) => {
             setTitle(event.target.value);
             setNotice("");
+            setFieldInvalid(false);
+            setError("");
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter") {

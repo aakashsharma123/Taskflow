@@ -9,6 +9,7 @@ const seed: Task[] = [
     id: 9,
     title: "Seed",
     activity: [],
+    comments: [],
     description: "",
     labels: [],
     dueDate: null,
@@ -673,4 +674,54 @@ test("epic rename and removal update live, archived and deleted records without 
   const restored = createTaskStore(seed, () => storage);
   restored.load();
   assert.equal(restored.getSnapshot().error, null);
+});
+
+test("discussion preserves authors and drafts on failed writes, survives task undo and records only saved events", () => {
+  const memory = memoryStorage();
+  let fail = false;
+  const store = createTaskStore(seed, () => ({
+    ...memory,
+    setItem(key, value) {
+      if (fail) throw new Error("Quota");
+      memory.setItem(key, value);
+    },
+  }));
+  store.load();
+  store.addMember("Maya");
+  store.selectMember("Maya");
+  assert.equal(store.addComment(9, "  First update  ").ok, true);
+  const comment = store.getSnapshot().tasks[0].comments[0];
+  assert.equal(comment.author, "Maya");
+  assert.equal(comment.body, "First update");
+  fail = true;
+  assert.equal(store.editComment(9, comment.id, "Edited").ok, false);
+  assert.equal(store.deleteComment(9, comment.id).ok, false);
+  assert.equal(store.getSnapshot().tasks[0].comments[0].body, "First update");
+  fail = false;
+  store.selectMember(null);
+  store.editComment(9, comment.id, "Edited");
+  assert.equal(store.getSnapshot().tasks[0].comments[0].author, "Maya");
+  store.deleteTask(9);
+  store.restoreDeletedTask(9);
+  assert.equal(store.getSnapshot().tasks[0].comments[0].body, "Edited");
+  store.deleteComment(9, comment.id);
+  assert.deepEqual(store.getSnapshot().tasks[0].comments, []);
+  assert.equal(store.editComment(9, comment.id, "Stale").ok, false);
+  assert.equal(
+    store.getSnapshot().tasks[0].activity.at(-1)?.message,
+    "Comment removed",
+  );
+});
+
+test("subtasks can be renamed and removed without changing parent status", () => {
+  const memory = memoryStorage();
+  const store = createTaskStore(seed, () => memory);
+  store.load();
+  store.addSubtask(9, "Draft");
+  assert.equal(store.renameSubtask(9, 1, "Final").ok, true);
+  assert.equal(store.getSnapshot().tasks[0].subtasks[0].title, "Final");
+  assert.equal(store.deleteSubtask(9, 1).ok, true);
+  assert.equal(store.getSnapshot().tasks[0].status, "todo");
+  assert.equal(store.getSnapshot().tasks[0].subtasks.length, 0);
+  assert.equal(store.renameSubtask(9, 1, "Stale").ok, false);
 });

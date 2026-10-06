@@ -69,9 +69,28 @@ export function recordTaskActivity(
       );
     if (before.archived !== after.archived)
       messages.push(after.archived ? "Task archived" : "Restored from archive");
+    for (const comment of after.comments) {
+      const previous = before.comments.find((item) => item.id === comment.id);
+      if (!previous) messages.push("Comment added");
+      else if (previous.body !== comment.body) messages.push("Comment edited");
+    }
+    if (
+      before.comments.some(
+        (comment) => !after.comments.some((item) => item.id === comment.id),
+      )
+    )
+      messages.push("Comment removed");
+    if (
+      before.subtasks.some(
+        (subtask) => !after.subtasks.some((item) => item.id === subtask.id),
+      )
+    )
+      messages.push("Subtask removed");
     for (const subtask of after.subtasks) {
       const previous = before.subtasks.find((item) => item.id === subtask.id);
       if (!previous) messages.push(`Subtask added: ${subtask.title}`);
+      else if (previous.title !== subtask.title)
+        messages.push(`Subtask renamed: ${subtask.title}`);
       else if (previous.completed !== subtask.completed)
         messages.push(
           `${subtask.completed ? "Completed" : "Reopened"} subtask: ${subtask.title}`,

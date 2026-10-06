@@ -10,7 +10,16 @@ export type TaskPlacement = "board" | "backlog";
 
 export type TaskActivity = { id: number; at: string; message: string };
 
+export type TaskComment = {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
 export type Task = {
+  comments: TaskComment[];
   id: number;
   title: string;
   description: string;

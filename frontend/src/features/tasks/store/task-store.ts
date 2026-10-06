@@ -1,3 +1,4 @@
+import { commentBodySchema } from "@/features/tasks/schemas/task-comment-schema";
 import * as sprintCommands from "@/features/sprints/lib/sprint-commands";
 import { workspaceSchema } from "@/features/workspace/schemas/workspace-schema";
 import {
@@ -467,6 +468,7 @@ export function createTaskStore(
           ...validated.data,
           id,
           activity: [],
+          comments: [],
           sprintId: null,
           subtasks: [],
           archived: false,
@@ -538,6 +540,103 @@ export function createTaskStore(
         snapshot.epics.filter((epic) => epic !== name),
         unlink(snapshot.removedTasks),
       );
+    },
+    addComment(taskId: number, body: string): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === taskId);
+      if (!task) return missingTask;
+      const validated = commentBodySchema.safeParse(body);
+      if (!validated.success)
+        return { ok: false, error: validated.error.issues[0].message };
+      if (task.comments.length >= 200)
+        return {
+          ok: false,
+          error: "This task has reached its limit of 200 comments.",
+        };
+      return saveTask({
+        ...task,
+        comments: [
+          ...task.comments,
+          {
+            id: crypto.randomUUID(),
+            author: snapshot.settings.currentMember ?? "Local user",
+            body: validated.data,
+            createdAt: now().toISOString(),
+            updatedAt: null,
+          },
+        ],
+      });
+    },
+    editComment(taskId: number, commentId: string, body: string): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === taskId);
+      if (!task) return missingTask;
+      const comment = task.comments.find((comment) => comment.id === commentId);
+      if (!comment)
+        return { ok: false, error: "This comment is no longer available." };
+      const validated = commentBodySchema.safeParse(body);
+      if (!validated.success)
+        return { ok: false, error: validated.error.issues[0].message };
+      if (comment.body === validated.data) return { ok: true };
+      return saveTask({
+        ...task,
+        comments: task.comments.map((comment) =>
+          comment.id === commentId
+            ? {
+                ...comment,
+                body: validated.data,
+                updatedAt: now().toISOString(),
+              }
+            : comment,
+        ),
+      });
+    },
+    deleteComment(taskId: number, commentId: string): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === taskId);
+      if (!task) return missingTask;
+      if (!task.comments.some((comment) => comment.id === commentId))
+        return { ok: false, error: "This comment is no longer available." };
+      return saveTask({
+        ...task,
+        comments: task.comments.filter((comment) => comment.id !== commentId),
+      });
+    },
+    renameSubtask(
+      taskId: number,
+      subtaskId: number,
+      title: string,
+    ): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === taskId);
+      if (!task) return missingTask;
+      if (!task.subtasks.some((item) => item.id === subtaskId))
+        return { ok: false, error: "This subtask is no longer available." };
+      const validated = subtaskTitleSchema.safeParse(title);
+      if (!validated.success)
+        return { ok: false, error: validated.error.issues[0].message };
+      return saveTask({
+        ...task,
+        subtasks: task.subtasks.map((item) =>
+          item.id === subtaskId ? { ...item, title: validated.data } : item,
+        ),
+      });
+    },
+    deleteSubtask(taskId: number, subtaskId: number): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === taskId);
+      if (!task) return missingTask;
+      if (!task.subtasks.some((item) => item.id === subtaskId))
+        return { ok: false, error: "This subtask is no longer available." };
+      return saveTask({
+        ...task,
+        subtasks: task.subtasks.filter((item) => item.id !== subtaskId),
+      });
     },
     addSubtask(taskId: number, title: string): SaveResult {
       const blocked = prepare();

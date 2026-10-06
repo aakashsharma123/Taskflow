@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { taskCommentsSchema } from "@/features/tasks/schemas/task-comment-schema";
 import type { Task } from "@/features/tasks/types/task";
 import {
   taskTitleSchema,
@@ -24,6 +25,7 @@ const savedTaskSchema: z.ZodType<Task> = z.object({
   sprintId: idSchema.nullable().default(null),
   placement: z.enum(["board", "backlog"]).default("board"),
   activity: taskActivitySchema,
+  comments: taskCommentsSchema,
   title: taskTitleSchema,
   description: taskDescriptionSchema,
   labels: taskLabelsSchema,
