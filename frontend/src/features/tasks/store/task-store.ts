@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  workspaceHistorySchema,
+  recordWorkspaceDay,
+  type DailySummary,
+} from "./workspace-history";
 import type {
   Task,
   TaskStatus,
@@ -35,6 +40,7 @@ const savedTaskSchema: z.ZodType<Task> = z.object({
 });
 const workspaceSchema = z.object({
   version: z.literal(1),
+  history: workspaceHistorySchema.default([]),
   removedTasks: z.array(savedTaskSchema).default([]),
   tasks: z
     .array(savedTaskSchema)
@@ -53,6 +59,7 @@ const workspaceSchema = z.object({
 type Snapshot = {
   tasks: Task[];
   removedTasks: Task[];
+  history: DailySummary[];
   epics: string[];
   ready: boolean;
   error: string | null;
@@ -65,10 +72,15 @@ const taskEpics = (tasks: Task[]) => [
 const nextId = (items: { id: number }[]) =>
   items.reduce((max, item) => Math.max(max, item.id), 0) + 1;
 
-export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
+export function createTaskStore(
+  seed: Task[],
+  getStorage: () => StorageClient,
+  now: () => Date = () => new Date(),
+) {
   const serverSnapshot: Snapshot = {
     tasks: seed,
     removedTasks: [],
+    history: [],
     epics: taskEpics(seed),
     ready: false,
     error: null,
@@ -94,7 +106,14 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
         )
       )
         throw new Error("Unknown epic reference");
-      snapshot = { tasks, removedTasks, epics, ready: true, error: null };
+      snapshot = {
+        tasks,
+        removedTasks,
+        epics,
+        history: saved?.history ?? [],
+        ready: true,
+        error: null,
+      };
     } catch {
       snapshot = {
         ...snapshot,
@@ -122,11 +141,23 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
     removedTasks = snapshot.removedTasks,
   ): SaveResult {
     try {
+      const history = recordWorkspaceDay(
+        snapshot.history,
+        tasks,
+        now().toISOString().slice(0, 10),
+      );
       getStorage().setItem(
         TASK_STORAGE_KEY,
-        JSON.stringify({ version: 1, tasks, epics, removedTasks }),
+        JSON.stringify({ version: 1, tasks, epics, removedTasks, history }),
       );
-      snapshot = { tasks, removedTasks, epics, ready: true, error: null };
+      snapshot = {
+        tasks,
+        removedTasks,
+        epics,
+        history,
+        ready: true,
+        error: null,
+      };
       emit();
       return { ok: true };
     } catch {

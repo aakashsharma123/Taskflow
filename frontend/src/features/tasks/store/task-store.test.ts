@@ -284,3 +284,64 @@ test("backlog placement persists, keeps workflow and children, and cannot move a
   assert.equal(store.setPlacement(10, "backlog").ok, false);
   assert.equal(store.setPlacement(999, "board").ok, false);
 });
+
+test("records actual daily totals and replaces the same UTC day", () => {
+  const storage = memoryStorage();
+  let time = "2026-10-05T23:00:00Z";
+  const store = createTaskStore(
+    seed,
+    () => storage,
+    () => new Date(time),
+  );
+  store.load();
+  assert.deepEqual(store.getSnapshot().history, []);
+  store.moveTask(9, "done");
+  store.createTask(input);
+  assert.deepEqual(store.getSnapshot().history, [
+    { date: "2026-10-05", total: 2, completed: 1 },
+  ]);
+  time = "2026-10-06T01:00:00Z";
+  store.moveTask(10, "done");
+  store.setArchived(9, true);
+  assert.deepEqual(store.getSnapshot().history, [
+    { date: "2026-10-05", total: 2, completed: 1 },
+    { date: "2026-10-06", total: 2, completed: 2 },
+  ]);
+  store.deleteTask(9);
+  store.load();
+  assert.deepEqual(store.getSnapshot().history[1], {
+    date: "2026-10-06",
+    total: 1,
+    completed: 1,
+  });
+  store.restoreDeletedTask(9);
+  assert.equal(store.getSnapshot().history[1].completed, 2);
+});
+
+test("failed writes do not record a misleading completion history", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => ({
+    ...storage,
+    setItem() {
+      throw new Error("Quota");
+    },
+  }));
+  store.load();
+  assert.equal(store.moveTask(9, "done").ok, false);
+  assert.deepEqual(store.getSnapshot().history, []);
+});
+
+test("legacy tasks migrate placement and archive without inventing history", () => {
+  const storage = memoryStorage();
+  const legacy = { ...seed[0], archived: undefined, placement: undefined };
+  storage.setItem(
+    TASK_STORAGE_KEY,
+    JSON.stringify({ version: 1, tasks: [legacy] }),
+  );
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.getSnapshot().error, null);
+  assert.equal(store.getSnapshot().tasks[0].archived, false);
+  assert.equal(store.getSnapshot().tasks[0].placement, "board");
+  assert.deepEqual(store.getSnapshot().history, []);
+});
