@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createTaskStore, TASK_STORAGE_KEY } from "./task-store";
-import type { Task } from "../types/task";
+import type { Task } from "../schemas/types/task";
 
 const seed: Task[] = [
   {
@@ -12,6 +12,7 @@ const seed: Task[] = [
     epic: null,
     assignee: null,
     subtasks: [],
+    archived: false,
   },
 ];
 const input = {
@@ -230,4 +231,38 @@ test("moving a task changes only its status and survives reload", () => {
   restored.load();
   assert.equal(restored.getSnapshot().tasks[0].status, "done");
   assert.equal(store.moveTask(999, "done").ok, false);
+});
+
+test("archive and deletion preserve children, undo and unique IDs", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  store.addSubtask(9, "Keep me");
+  assert.equal(store.setArchived(9, true).ok, true);
+  assert.equal(store.getSnapshot().tasks[0].archived, true);
+  assert.equal(store.setArchived(9, false).ok, true);
+  const before = store.getSnapshot().tasks[0];
+  assert.equal(store.deleteTask(9).ok, true);
+  assert.equal(store.getSnapshot().tasks.length, 0);
+  assert.equal(store.createTask(input).ok, true);
+  assert.equal(store.getSnapshot().tasks[0].id, 10);
+  assert.equal(store.restoreDeletedTask(9).ok, true);
+  assert.deepEqual(store.getSnapshot().tasks[0], before);
+  assert.equal(store.restoreDeletedTask(9).ok, false);
+  store.load();
+  assert.equal(store.getSnapshot().tasks.length, 2);
+});
+
+test("failed deletion retains the task", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => ({
+    ...storage,
+    setItem() {
+      throw new Error("Quota");
+    },
+  }));
+  store.load();
+  assert.equal(store.deleteTask(9).ok, false);
+  assert.deepEqual(store.getSnapshot().tasks, seed);
+  assert.deepEqual(store.getSnapshot().removedTasks, []);
 });

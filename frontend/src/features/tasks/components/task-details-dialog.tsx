@@ -4,8 +4,9 @@ import { useRef } from "react";
 import { Dialog } from "@ark-ui/react/dialog";
 import { DialogPanel } from "@/shared/ui/dialog-panel";
 import { SubtaskList } from "@/features/tasks/components/subtask-list";
+import { TaskLifecycleActions } from "./task-lifecycle-actions";
 import { TaskForm } from "@/features/tasks/components/task-form";
-import type { Task } from "@/features/tasks/types/task";
+import type { Task } from "@/features/tasks/schemas/types/task";
 import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schema";
 import type { SaveResult } from "@/features/tasks/store/task-store";
 
@@ -16,6 +17,10 @@ type TaskDetailsDialogProps = {
   finalFocusEl: () => HTMLElement | null;
   epics: string[];
   assignees: string[];
+  onLifecycle: (
+    id: number,
+    action: "archive" | "restore" | "delete",
+  ) => SaveResult;
   onUpdate: (id: number, input: CreateTaskInput) => SaveResult;
   onAddSubtask: (id: number, title: string) => SaveResult;
   onToggleSubtask: (
@@ -33,6 +38,7 @@ export function TaskDetailsDialog({
   epics,
   assignees,
   onUpdate,
+  onLifecycle,
   onAddSubtask,
   onToggleSubtask,
 }: TaskDetailsDialogProps) {
@@ -65,6 +71,14 @@ export function TaskDetailsDialog({
               return result;
             }}
           >
+            <TaskLifecycleActions
+              task={task}
+              onAction={(action) => {
+                const result = onLifecycle(task.id, action);
+                if (result.ok) onOpenChange(false);
+                return result;
+              }}
+            />
             <SubtaskList
               task={task}
               onAdd={onAddSubtask}

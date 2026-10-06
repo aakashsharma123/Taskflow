@@ -1,4 +1,4 @@
-import type { Task } from "@/features/tasks/types/task";
+import type { Task } from "@/features/tasks/schemas/types/task";
 
 // Frontend fixtures only; this board model is not the current backend contract.
 const taskFixtures = [
@@ -98,10 +98,11 @@ const taskFixtures = [
     priority: "medium",
     assignee: "Maya Chen",
   },
-] satisfies Omit<Task, "subtasks">[];
+] satisfies Omit<Task, "subtasks" | "archived">[];
 
 export const sampleTasks: Task[] = taskFixtures.map((task) => ({
   ...task,
+  archived: false,
   subtasks:
     task.id === 14
       ? [

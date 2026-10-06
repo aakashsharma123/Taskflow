@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Task, TaskStatus } from "@/features/tasks/types/task";
+import type { Task, TaskStatus } from "@/features/tasks/schemas/types/task";
 import {
   createTaskSchema,
   taskTitleSchema,
@@ -15,6 +15,7 @@ const subtaskSchema = z
   .strict();
 const savedTaskSchema: z.ZodType<Task> = z.object({
   id: idSchema,
+  archived: z.boolean().default(false),
   title: taskTitleSchema,
   status: z.enum(["todo", "in_progress", "in_review", "done"]),
   priority: z.enum(["low", "medium", "high"]),
@@ -29,6 +30,7 @@ const savedTaskSchema: z.ZodType<Task> = z.object({
 });
 const workspaceSchema = z.object({
   version: z.literal(1),
+  removedTasks: z.array(savedTaskSchema).default([]),
   tasks: z
     .array(savedTaskSchema)
     .refine(
@@ -45,6 +47,7 @@ const workspaceSchema = z.object({
 
 type Snapshot = {
   tasks: Task[];
+  removedTasks: Task[];
   epics: string[];
   ready: boolean;
   error: string | null;
@@ -60,6 +63,7 @@ const nextId = (items: { id: number }[]) =>
 export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
   const serverSnapshot: Snapshot = {
     tasks: seed,
+    removedTasks: [],
     epics: taskEpics(seed),
     ready: false,
     error: null,
@@ -74,12 +78,18 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
       const saved =
         raw === null ? null : workspaceSchema.parse(JSON.parse(raw));
       const tasks = saved?.tasks ?? seed;
-      const epics = saved?.epics ?? taskEpics(tasks);
+      const removedTasks = saved?.removedTasks ?? [];
+      const allTasks = [...tasks, ...removedTasks];
+      if (new Set(allTasks.map((task) => task.id)).size !== allTasks.length)
+        throw new Error("Duplicate task IDs");
+      const epics = saved?.epics ?? taskEpics(allTasks);
       if (
-        tasks.some((task) => task.epic !== null && !epics.includes(task.epic))
+        allTasks.some(
+          (task) => task.epic !== null && !epics.includes(task.epic),
+        )
       )
         throw new Error("Unknown epic reference");
-      snapshot = { tasks, epics, ready: true, error: null };
+      snapshot = { tasks, removedTasks, epics, ready: true, error: null };
     } catch {
       snapshot = {
         ...snapshot,
@@ -101,13 +111,17 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
     if (snapshot.error) return { ok: false, error: snapshot.error };
   }
 
-  function save(tasks: Task[], epics = snapshot.epics): SaveResult {
+  function save(
+    tasks: Task[],
+    epics = snapshot.epics,
+    removedTasks = snapshot.removedTasks,
+  ): SaveResult {
     try {
       getStorage().setItem(
         TASK_STORAGE_KEY,
-        JSON.stringify({ version: 1, tasks, epics }),
+        JSON.stringify({ version: 1, tasks, epics, removedTasks }),
       );
-      snapshot = { tasks, epics, ready: true, error: null };
+      snapshot = { tasks, removedTasks, epics, ready: true, error: null };
       emit();
       return { ok: true };
     } catch {
@@ -155,6 +169,35 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
       };
     },
     load,
+    setArchived(id: number, archived: boolean): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === id);
+      if (!task) return missingTask;
+      return saveTask({ ...task, archived });
+    },
+    deleteTask(id: number): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === id);
+      if (!task) return missingTask;
+      return save(
+        snapshot.tasks.filter((task) => task.id !== id),
+        snapshot.epics,
+        [...snapshot.removedTasks, task],
+      );
+    },
+    restoreDeletedTask(id: number): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.removedTasks.find((task) => task.id === id);
+      if (!task) return missingTask;
+      return save(
+        [task, ...snapshot.tasks],
+        snapshot.epics,
+        snapshot.removedTasks.filter((task) => task.id !== id),
+      );
+    },
     moveTask(id: number, status: TaskStatus): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
@@ -169,10 +212,13 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
       const validated = validateTask(input);
       if (!validated.success)
         return { ok: false, error: validated.error.issues[0].message };
-      const id = nextId(snapshot.tasks);
+      const id = nextId([...snapshot.tasks, ...snapshot.removedTasks]);
       if (!Number.isSafeInteger(id))
         return { ok: false, error: "A new task ID could not be assigned." };
-      return save([{ ...validated.data, id, subtasks: [] }, ...snapshot.tasks]);
+      return save([
+        { ...validated.data, id, subtasks: [], archived: false },
+        ...snapshot.tasks,
+      ]);
     },
     updateTask(id: number, input: CreateTaskInput): SaveResult {
       const blocked = prepare();

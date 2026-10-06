@@ -5,7 +5,7 @@ import {
   createTaskStore,
   TASK_STORAGE_KEY,
 } from "@/features/tasks/store/task-store";
-import type { Task } from "@/features/tasks/types/task";
+import type { Task } from "@/features/tasks/schemas/types/task";
 
 export function useTaskStore(initialTasks: Task[]) {
   const [store] = useState(() =>
@@ -35,6 +35,9 @@ export function useTaskStore(initialTasks: Task[]) {
     ...snapshot,
     createTask: store.createTask,
     moveTask: store.moveTask,
+    setArchived: store.setArchived,
+    deleteTask: store.deleteTask,
+    restoreDeletedTask: store.restoreDeletedTask,
     updateTask: store.updateTask,
     createEpic: store.createEpic,
     addSubtask: store.addSubtask,

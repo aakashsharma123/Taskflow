@@ -1,21 +1,5 @@
-import Link from "next/link";
+import { ProjectNavigation } from "./project-navigation";
 import type { ReactNode } from "react";
-
-function BoardIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      className="size-5 shrink-0"
-    >
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M9 4v16M15 4v16" />
-    </svg>
-  );
-}
 
 function ProjectIdentity() {
   return (
@@ -44,24 +28,6 @@ function ProjectIdentity() {
         </p>
       </div>
     </div>
-  );
-}
-
-function ProjectNavigation() {
-  return (
-    <nav aria-label="Project navigation">
-      <ul className="menu w-full p-0">
-        <li>
-          <Link
-            href="/tasks"
-            aria-current="page"
-            className="nav-active gap-3 rounded-md px-3 py-3 text-sm font-medium"
-          >
-            <BoardIcon /> Board
-          </Link>
-        </li>
-      </ul>
-    </nav>
   );
 }
 
