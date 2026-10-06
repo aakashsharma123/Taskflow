@@ -1,42 +1,13 @@
+import { ProjectIdentity } from "@/features/settings/components/project-identity";
 import { ProjectNavigation } from "./project-navigation";
 import type { ReactNode } from "react";
-
-function ProjectIdentity() {
-  return (
-    <div className="flex items-center gap-3">
-      <span
-        aria-hidden="true"
-        className="grid size-10 shrink-0 place-items-center rounded-xl bg-secondary/15 text-xl font-semibold text-secondary shadow-sm"
-      >
-        <svg viewBox="0 0 40 40" className="size-8" fill="none">
-          <circle cx="20" cy="20" r="8" fill="currentColor" />
-          <ellipse
-            cx="20"
-            cy="20"
-            rx="18"
-            ry="9"
-            transform="rotate(-35 20 20)"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-        </svg>
-      </span>
-      <div>
-        <p className="text-xl font-semibold tracking-tight">Orbit</p>
-        <p className="mt-1 text-[11px] text-primary-content/75">
-          Software project
-        </p>
-      </div>
-    </div>
-  );
-}
 
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <a
         href="#main-content"
-        className="btn btn-primary fixed top-3 left-3 z-50 -translate-y-24 focus:translate-y-0"
+        className="fixed top-3 left-3 z-[60] -translate-y-24 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-content shadow-md focus:translate-y-0"
       >
         Skip to content
       </a>

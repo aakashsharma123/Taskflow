@@ -14,18 +14,16 @@ import {
 import { KanbanBoard } from "./kanban-board";
 import { TaskList } from "./task-list";
 import { taskColumns } from "@/features/tasks/constants/task-statuses";
-import type { Task } from "@/features/tasks/types/task";
 
 export function TaskWorkspace({
-  tasks: initialTasks,
   mode = "board",
 }: {
-  tasks: Task[];
   mode?: "board" | "archive" | "backlog";
 }) {
   const {
     tasks,
     epics,
+    settings,
     sprints,
     assignSprint,
     ready,
@@ -41,7 +39,7 @@ export function TaskWorkspace({
     addSubtask,
     setSubtaskCompleted,
     reload,
-  } = useTaskStore(initialTasks);
+  } = useTaskStore();
   const boardRef = useRef<HTMLDivElement>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -53,13 +51,7 @@ export function TaskWorkspace({
     action: "archive" | "restore" | "delete";
   } | null>(null);
   const [filters, setFilters] = useState(defaultTaskFilters);
-  const assignees = [
-    ...new Set(
-      [...initialTasks, ...tasks].flatMap((task) =>
-        task.assignee ? [task.assignee] : [],
-      ),
-    ),
-  ];
+  const assignees = settings.members;
   const eligibleTasks = tasks.filter((task) =>
     mode === "archive"
       ? task.archived

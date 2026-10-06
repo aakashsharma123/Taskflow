@@ -2,7 +2,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
-import { sampleTasks } from "@/features/tasks/data/sample-tasks";
 import { CreateSprintForm } from "./create-sprint-form";
 import { SprintCard } from "./sprint-card";
 const rank = { active: 0, planned: 1, completed: 2 };
@@ -17,7 +16,7 @@ export function SprintPlanner() {
     startSprint,
     completeSprint,
     reload,
-  } = useTaskStore(sampleTasks);
+  } = useTaskStore();
   const [notice, setNotice] = useState("");
   if (!ready)
     return (

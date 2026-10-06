@@ -581,3 +581,56 @@ test("undo deletion respects a sprint started while the task was deleted", () =>
     "board",
   );
 });
+
+test("settings and unused members persist, and removing a member unassigns live and undo records", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.addMember(" Alex Rivera ").ok, true);
+  assert.equal(store.addMember("alex rivera").ok, false);
+  store.updateSettings({ projectName: "Orbit Studio", appearance: "sage" });
+  store.updateTask(9, { ...input, assignee: "Alex Rivera" });
+  store.createTask({ ...input, assignee: "Alex Rivera" });
+  store.deleteTask(10);
+  assert.equal(store.removeMember("Alex Rivera").ok, true);
+  store.restoreDeletedTask(10);
+  store.load();
+  assert(store.getSnapshot().tasks.every((task) => task.assignee === null));
+  assert.equal(store.getSnapshot().settings.projectName, "Orbit Studio");
+  assert.equal(store.getSnapshot().settings.appearance, "sage");
+  assert.equal(
+    store.createTask({ ...input, assignee: "Alex Rivera" }).ok,
+    false,
+  );
+  store.addMember("Unused member");
+  store.load();
+  assert.deepEqual(store.getSnapshot().settings.members, ["Unused member"]);
+});
+
+test("legacy member catalogs migrate from assignments and failed settings writes retain preferences and members", () => {
+  const storage = memoryStorage();
+  let fail = false;
+  const assignedSeed = [{ ...seed[0], assignee: "Maya" }];
+  storage.setItem(
+    TASK_STORAGE_KEY,
+    JSON.stringify({ version: 1, tasks: assignedSeed }),
+  );
+  const store = createTaskStore(assignedSeed, () => ({
+    ...storage,
+    setItem(key, value) {
+      if (fail) throw new Error("Quota");
+      storage.setItem(key, value);
+    },
+  }));
+  store.load();
+  assert.deepEqual(store.getSnapshot().settings.members, ["Maya"]);
+  fail = true;
+  assert.equal(
+    store.updateSettings({ projectName: "New", appearance: "lavender" }).ok,
+    false,
+  );
+  assert.equal(store.removeMember("Maya").ok, false);
+  assert.equal(store.getSnapshot().settings.projectName, "Orbit");
+  assert.equal(store.getSnapshot().tasks[0].assignee, "Maya");
+  assert.deepEqual(store.getSnapshot().tasks[0].activity, []);
+});

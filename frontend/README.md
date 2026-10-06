@@ -19,29 +19,54 @@ No backend or environment variables are required.
 - **Board (`/tasks`)**: create/edit tasks, epics and one-level subtasks. Move cards
   between columns using their handles. Space starts a keyboard drag, arrows move
   it, Space drops it and Escape cancels. The task status field is an alternative.
-- **Filters**: combine title/ID search, epic, assignee, priority and status.
-  Sort by creation ID, priority or title. Sorting does not reorder saved data.
+- **Task details**: optional plain text descriptions (5,000 characters), up to
+  five unique labels (24 characters each), and calendar due dates. Unfinished,
+  unarchived work becomes overdue after its due date in the user's local day.
+- **Filters**: combine title/ID search, epic, assignee, priority, status, label,
+  due date and sprint. Sort by creation ID, priority, title or due date, with
+  undated work last. Sorting does not reorder saved data.
+- **Activity**: the latest 100 saved events per task cover field changes, subtasks,
+  sprint membership and lifecycle actions. Events save with the task; failed writes
+  and no-op changes create no events. This is local history, not an authenticated
+  audit log.
 - **Backlog (`/backlog`)**: capture ideas or park existing work. Moving tasks
-  between Backlog and Board preserves status and subtasks.
+  between Backlog and Board preserves status and subtasks. Remove a task from
+  its active sprint before parking it.
+- **Sprints (`/sprints`)**: create a dated sprint with a goal and assign backlog
+  tasks. Starting moves its scope to Board; only one sprint can be active.
+  Completion requires confirmation, saves a summary and returns unfinished
+  tasks to Backlog with their statuses and children intact. Completed summaries
+  stay fixed when tasks are later reopened or deleted. Dates describe the planned
+  schedule; start and completion are explicit actions.
 - **Archive (`/tasks/archive`)**: archive tasks from their details and restore them
   later. Archive/delete require confirmation and discard unsaved form changes.
-  Undo is available for the most recent lifecycle action in the current view.
-  Deleted records are retained in local storage for undo and to avoid reusing IDs.
+  Archiving removes sprint membership. Undo is available for the most recent
+  lifecycle action in the current view. Deleted records are retained in local
+  storage for undo and to avoid reusing IDs.
 - **Dashboard (`/dashboard`)**: saved task totals, Board workflow, epic progress
   and daily completed-task totals. History records UTC days when changes are
   successfully saved, keeping the newest 90 daily records. Earlier days are
   unknown; unchanged days carry the last known total. Completed totals include
   archived work and can decrease when tasks are reopened or deleted.
+- **Settings (`/settings`)**: project name, up to 50 local assignee names, and
+  apricot, sage or lavender accents. Confirmed member removal unassigns live,
+  archived and deleted undo records together. These are local display names,
+  not accounts or invitations. Appearance also applies to portal dialogs.
 
-Subtask updates save immediately without changing the parent status. Creating
-unused epics persists them too. The app starts with clearly labeled sample tasks.
+Subtask changes save immediately without changing the parent status. Sprint
+assignment and task location actions also save immediately and discard unsaved
+form edits, as explained beside those controls. Creating unused epics and members
+persists them too. The app starts with clearly labeled sample tasks.
 
 ## Storage and boundaries
 
 Zod checks persisted data before loading. Existing workspaces migrate with defaults
-for subtasks, epic catalogs, archive and placement; history is not invented.
-Read failures pause mutations, while write failures keep drafts for retry. Storage
-changes synchronize across tabs, and mutations reload the latest saved snapshot.
+for new task fields, catalogs, sprints and settings; history is not invented.
+Read failures pause mutations, while write failures keep drafts for retry.
+One workspace provider owns the store across all routes. Same-tab updates appear
+immediately, storage events synchronize other tabs, and window focus refreshes
+saved changes. Mutations reload the latest snapshot before writing.
+
 Browser storage has no atomic transaction between concurrent writers in different
 tabs; this is a local workspace, not a shared collaboration service.
 Storage is scoped to the browser and origin and does not sync across devices.
@@ -53,21 +78,24 @@ The existing backend uses a different task contract and is unchanged.
   The route group does not change URLs or add a second sidebar.
 - `src/shared/components/`: shell and active project navigation.
 - `src/shared/ui/`: reusable Ark UI dialog surface.
+- `src/features/workspace/`: shared store provider and persisted workspace schema.
 - `src/features/tasks/components/task-workspace.tsx`: client controller composing
   filters, dialogs and the board/list views.
 - `src/features/tasks/components/kanban-board.tsx`: drag/drop presentation.
 - `src/features/tasks/components/task-form.tsx`: shared create/edit form.
-- `src/features/tasks/schemas/`: Zod validation rules.
-- `src/features/tasks/types/`: task, status, placement and subtask TypeScript types.
-- `src/features/tasks/store/`: validated persistence, task operations and history.
-- `src/features/tasks/hooks/`: React subscription to the task store.
-- `src/features/tasks/lib/`: pure filtering/sorting rules and tests.
+- `src/features/tasks/schemas/`: task and metadata Zod validation rules.
+- `src/features/tasks/types/`: task, status, placement, activity and subtask types.
+- `src/features/tasks/store/`: persistence, task operations and saved history.
+- `src/features/tasks/hooks/`: access to the shared workspace store.
+- `src/features/tasks/lib/`: pure filtering, sorting and calendar-date rules.
+- `src/features/sprints/`: sprint forms, cards, schemas, types and pure commands.
+- `src/features/settings/`: settings forms, member management and accent options.
 - `src/features/epics/`: epic dialog and validation.
 - `src/features/dashboard/`: dashboard components and pure summary calculations.
 
+Tests sit beside the schema, store and calculation code they verify.
 TanStack Query is deferred until an API feature needs server-state caching. The
-current browser store already owns persistence, so a second state layer is not
-needed for these features.
+browser store already owns persistence; no additional state layer is needed.
 
 ## Checks
 
@@ -86,11 +114,3 @@ with `npm run format`.
 Each feature has a separate stacked branch and local commit. PRs should target the
 preceding feature branch until it merges, then be retargeted to the main branch.
 Commit subjects follow `type / short description`, with a short structural body.
-
-Task descriptions are optional plain text, limited to 5,000 characters. Create and edit share the same Zod rules. Existing workspaces migrate to empty descriptions.
-
-Task labels are entered with commas (five unique names, 24 characters each) and get stable colors on cards. Due dates are calendar dates in the user’s local day; unfinished, unarchived tasks become overdue after that date. Filters combine labels and due dates; date sorting puts undated tasks last.
-
-Task details include the latest 100 saved activity events. Changes to fields, subtasks and lifecycle actions are recorded in the same storage write as the task. Failed writes and no-op changes create no events; migrations never invent historical activity. This is local change history, not an authenticated audit log.
-
-Sprint planning lives at `/sprints`, with validation, types, UI and progress calculations in `features/sprints/`. Create a dated sprint, add unassigned backlog tasks, and start it to move its scope to Board. Only one sprint can be active. Task details and filters expose sprint membership. Archive removes a task from its sprint; active sprint tasks must be unassigned before parking them. Completing a sprint saves a summary and carries unfinished tasks to Backlog, preserving their statuses and children. Completed summaries stay fixed when tasks are later reopened or deleted. Sprint dates are planned calendar dates; starting/completing are explicit actions.

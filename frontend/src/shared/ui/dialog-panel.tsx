@@ -25,7 +25,7 @@ export function DialogPanel({
                   aria-hidden="true"
                   className="h-1.5 w-5 rounded-full bg-secondary"
                 />
-                Orbit / Board
+                Orbit / Workspace
               </p>
               <Dialog.Title className="text-xl font-semibold tracking-tight">
                 {title}
