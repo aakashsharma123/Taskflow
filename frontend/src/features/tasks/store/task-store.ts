@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  taskLabelsSchema,
+  taskDueDateSchema,
+} from "../schemas/task-metadata-schema";
+import {
   workspaceHistorySchema,
   recordWorkspaceDay,
   type DailySummary,
@@ -29,6 +33,8 @@ const savedTaskSchema: z.ZodType<Task> = z.object({
   placement: z.enum(["board", "backlog"]).default("board"),
   title: taskTitleSchema,
   description: taskDescriptionSchema,
+  labels: taskLabelsSchema,
+  dueDate: taskDueDateSchema,
   status: z.enum(["todo", "in_progress", "in_review", "done"]),
   priority: z.enum(["low", "medium", "high"]),
   epic: z.string().min(1).max(60).nullable(),

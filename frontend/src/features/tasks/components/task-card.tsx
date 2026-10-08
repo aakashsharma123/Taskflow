@@ -1,3 +1,4 @@
+import { TaskMetadata } from "./task-metadata";
 import type { ReactNode } from "react";
 import type { Task } from "@/features/tasks/types/task";
 
@@ -98,6 +99,7 @@ export function TaskCard({
           </span>
         )}
       </div>
+      <TaskMetadata task={task} />
       {task.subtasks.length > 0 && (
         <div className="mb-4 flex items-center gap-3">
           <progress

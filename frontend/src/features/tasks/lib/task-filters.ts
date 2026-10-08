@@ -1,11 +1,14 @@
 import type { Task } from "@/features/tasks/types/task";
-export type TaskSort = "newest" | "oldest" | "priority" | "title";
+import { isOverdue, localDay } from "./task-dates";
+export type TaskSort = "newest" | "oldest" | "priority" | "title" | "dueDate";
 export type TaskFilters = {
   search: string;
   epic: string;
   assignee: string;
   priority: string;
   status: string;
+  label: string;
+  due: string;
   sort: TaskSort;
 };
 export const defaultTaskFilters: TaskFilters = {
@@ -14,6 +17,8 @@ export const defaultTaskFilters: TaskFilters = {
   assignee: "",
   priority: "",
   status: "",
+  label: "",
+  due: "",
   sort: "newest",
 };
 export const hasTaskFilters = (filters: TaskFilters) =>
@@ -23,12 +28,15 @@ export const hasTaskFilters = (filters: TaskFilters) =>
     filters.assignee ||
     filters.priority ||
     filters.status ||
+    filters.label ||
+    filters.due ||
     filters.sort !== "newest",
   );
 const priorityRank = { high: 0, medium: 1, low: 2 };
 export function filterTasks(
   tasks: readonly Task[],
   filters: TaskFilters,
+  today = localDay(),
 ): Task[] {
   const query = filters.search.trim().toLowerCase();
   return tasks
@@ -43,9 +51,22 @@ export function filterTasks(
             ? task.assignee === null
             : task.assignee === filters.assignee)) &&
         (!filters.priority || task.priority === filters.priority) &&
-        (!filters.status || task.status === filters.status),
+        (!filters.status || task.status === filters.status) &&
+        (!filters.label || task.labels.includes(filters.label)) &&
+        (!filters.due ||
+          (filters.due === "overdue"
+            ? isOverdue(task, today)
+            : filters.due === "today"
+              ? task.dueDate === today
+              : task.dueDate === null)),
     )
     .sort((a, b) => {
+      if (filters.sort === "dueDate")
+        return (
+          (a.dueDate ?? "9999-12-31").localeCompare(
+            b.dueDate ?? "9999-12-31",
+          ) || b.id - a.id
+        );
       if (filters.sort === "oldest") return a.id - b.id;
       if (filters.sort === "title")
         return a.title.localeCompare(b.title) || b.id - a.id;

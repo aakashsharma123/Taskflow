@@ -132,6 +132,7 @@ export function TaskWorkspace({
         onChange={setFilters}
         epics={epics}
         assignees={assignees}
+        labels={[...new Set(tasks.flatMap((task) => task.labels))].sort()}
       />
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <p

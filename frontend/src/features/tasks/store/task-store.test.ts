@@ -2,12 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createTaskStore, TASK_STORAGE_KEY } from "./task-store";
 import type { Task } from "../types/task";
+import type { CreateTaskInput } from "../schemas/create-task-schema";
 
 const seed: Task[] = [
   {
     id: 9,
     title: "Seed",
     description: "",
+    labels: [],
+    dueDate: null,
     status: "todo",
     priority: "medium",
     epic: null,
@@ -17,14 +20,16 @@ const seed: Task[] = [
     placement: "board",
   },
 ];
-const input = {
+const input: CreateTaskInput = {
   title: "New task",
   description: "",
+  labels: [],
+  dueDate: null,
   status: "in_review",
   priority: "high",
   epic: null,
   assignee: null,
-} as const;
+};
 function memoryStorage() {
   const data = new Map<string, string>();
   return {
@@ -379,4 +384,26 @@ test("descriptions migrate, persist, and survive archive and undo", () => {
     store.updateTask(9, { ...input, description: "a".repeat(5001) }).ok,
     false,
   );
+});
+
+test("metadata migrates and saves labels and calendar dates", () => {
+  const storage = memoryStorage();
+  storage.setItem(
+    TASK_STORAGE_KEY,
+    JSON.stringify({
+      version: 1,
+      tasks: [{ ...seed[0], labels: undefined, dueDate: undefined }],
+    }),
+  );
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.deepEqual(store.getSnapshot().tasks[0].labels, []);
+  assert.equal(
+    store.updateTask(9, { ...input, labels: ["design"], dueDate: "2026-10-06" })
+      .ok,
+    true,
+  );
+  store.load();
+  assert.deepEqual(store.getSnapshot().tasks[0].labels, ["design"]);
+  assert.equal(store.getSnapshot().tasks[0].dueDate, "2026-10-06");
 });

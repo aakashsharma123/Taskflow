@@ -12,6 +12,8 @@ export type Task = {
   id: number;
   title: string;
   description: string;
+  labels: string[];
+  dueDate: string | null;
   status: TaskStatus;
   epic: string | null;
   priority: "high" | "medium" | "low";
