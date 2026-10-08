@@ -14,15 +14,12 @@ npm run dev
 ```
 
 Open http://localhost:3000. The home route redirects to `/tasks`.
-The current checkpoint is a responsive workspace shell and a four-column task board
-using local sample data. Search and epic filtering work locally. Cards are read-only;
-dragging and task details will come later. No backend or environment variables are required.
-The New task button opens an Ark UI dialog with title, status, priority, epic, and
-assignee fields. Check details validates the form with Zod and shows field errors. Titles are trimmed
-and limited to 120 characters; epic and assignee values must match the available
-options or be empty. Empty selections become null. This checkpoint validates only;
-local saving comes next. Options come from the sample tasks.
-The frontend board uses a status field; the existing backend still uses completed.
+The board starts with sample tasks. New tasks are validated with Zod, added to their
+status column, and saved in this browser. Saved data is checked before loading;
+read failures pause changes, and write failures keep the form open for retry.
+Tasks synchronize across tabs. No backend or environment variables are required.
+Titles are trimmed and limited to 120 characters. Empty epic and assignee selections
+become null. The frontend uses status; the existing backend still uses completed.
 
 ## Checks
 
@@ -59,3 +56,6 @@ Task validation lives in `src/features/tasks/schemas/create-task-schema.ts`. The
 dialog reads native form values and displays errors; the schema owns the rules.
 
 Schema tests use Node’s test runner through tsx to run TypeScript.
+
+Browser persistence lives in `features/tasks/store/task-store.ts`; the React
+subscription lives in `features/tasks/hooks/use-task-store.ts`.

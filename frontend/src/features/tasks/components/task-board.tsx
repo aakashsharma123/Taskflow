@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
 import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog";
 import { TaskCard } from "@/features/tasks/components/task-card";
 import type { Task, TaskStatus } from "@/features/tasks/types/task";
@@ -12,7 +13,10 @@ const columns = [
   { status: "done", label: "Done", dot: "bg-emerald-500" },
 ] satisfies { status: TaskStatus; label: string; dot: string }[];
 
-export function TaskBoard({ tasks }: { tasks: Task[] }) {
+export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
+  const { tasks, ready, error, createTask, reload } =
+    useTaskStore(initialTasks);
+  const [notice, setNotice] = useState("");
   const [search, setSearch] = useState("");
   const [epic, setEpic] = useState("");
   const epics = [
@@ -32,6 +36,24 @@ export function TaskBoard({ tasks }: { tasks: Task[] }) {
 
   return (
     <>
+      {error && (
+        <div
+          role="alert"
+          className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs leading-6 text-rose-800"
+        >
+          {error}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm ml-2"
+            onClick={reload}
+          >
+            Try again
+          </button>
+        </div>
+      )}
+      <p role="status" className="mb-3 text-xs text-teal-800">
+        {notice}
+      </p>
       <div className="mb-6 flex flex-wrap items-end gap-3">
         <label className="flex w-full flex-col gap-2 sm:w-64">
           <span className="text-xs font-medium text-base-content/70">
@@ -84,7 +106,20 @@ export function TaskBoard({ tasks }: { tasks: Task[] }) {
         >
           {filteredTasks.length} of {tasks.length} tasks
         </p>
-        <CreateTaskDialog epics={epics} assignees={assignees} />
+        <CreateTaskDialog
+          epics={epics}
+          assignees={assignees}
+          disabled={!ready || Boolean(error)}
+          onCreate={(input) => {
+            const result = createTask(input);
+            if (result.ok) {
+              setSearch("");
+              setEpic("");
+              setNotice("Task created and saved in this browser.");
+            }
+            return result;
+          }}
+        />
       </div>
       <div
         role="region"
@@ -143,7 +178,7 @@ export function TaskBoard({ tasks }: { tasks: Task[] }) {
         </div>
       </div>
       <p className="mt-2 text-[11px] text-base-content/60">
-        Sample data · Cards are read-only.
+        Saved in this browser · Starts with sample tasks.
       </p>
     </>
   );
