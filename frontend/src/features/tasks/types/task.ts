@@ -11,6 +11,7 @@ export type TaskPlacement = "board" | "backlog";
 export type Task = {
   id: number;
   title: string;
+  description: string;
   status: TaskStatus;
   epic: string | null;
   priority: "high" | "medium" | "low";

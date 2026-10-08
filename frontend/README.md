@@ -86,3 +86,5 @@ with `npm run format`.
 Each feature has a separate stacked branch and local commit. PRs should target the
 preceding feature branch until it merges, then be retargeted to the main branch.
 Commit subjects follow `type / short description`, with a short structural body.
+
+Task descriptions are optional plain text, limited to 5,000 characters. Create and edit share the same Zod rules. Existing workspaces migrate to empty descriptions.

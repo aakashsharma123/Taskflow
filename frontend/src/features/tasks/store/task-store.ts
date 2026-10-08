@@ -12,6 +12,7 @@ import type {
 import {
   createTaskSchema,
   taskTitleSchema,
+  taskDescriptionSchema,
   type CreateTaskInput,
 } from "@/features/tasks/schemas/create-task-schema";
 import { subtaskTitleSchema } from "@/features/tasks/schemas/subtask-schema";
@@ -27,6 +28,7 @@ const savedTaskSchema: z.ZodType<Task> = z.object({
   archived: z.boolean().default(false),
   placement: z.enum(["board", "backlog"]).default("board"),
   title: taskTitleSchema,
+  description: taskDescriptionSchema,
   status: z.enum(["todo", "in_progress", "in_review", "done"]),
   priority: z.enum(["low", "medium", "high"]),
   epic: z.string().min(1).max(60).nullable(),

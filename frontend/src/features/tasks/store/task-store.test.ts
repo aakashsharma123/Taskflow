@@ -7,6 +7,7 @@ const seed: Task[] = [
   {
     id: 9,
     title: "Seed",
+    description: "",
     status: "todo",
     priority: "medium",
     epic: null,
@@ -18,6 +19,7 @@ const seed: Task[] = [
 ];
 const input = {
   title: "New task",
+  description: "",
   status: "in_review",
   priority: "high",
   epic: null,
@@ -344,4 +346,37 @@ test("legacy tasks migrate placement and archive without inventing history", () 
   assert.equal(store.getSnapshot().tasks[0].archived, false);
   assert.equal(store.getSnapshot().tasks[0].placement, "board");
   assert.deepEqual(store.getSnapshot().history, []);
+});
+
+test("descriptions migrate, persist, and survive archive and undo", () => {
+  const storage = memoryStorage();
+  storage.setItem(
+    TASK_STORAGE_KEY,
+    JSON.stringify({
+      version: 1,
+      tasks: [{ ...seed[0], description: undefined }],
+    }),
+  );
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  assert.equal(store.getSnapshot().tasks[0].description, "");
+  assert.equal(
+    store.updateTask(9, {
+      ...input,
+      description: "  Acceptance criteria\nKeep line breaks  ",
+    }).ok,
+    true,
+  );
+  store.setArchived(9, true);
+  store.deleteTask(9);
+  store.restoreDeletedTask(9);
+  store.load();
+  assert.equal(
+    store.getSnapshot().tasks[0].description,
+    "Acceptance criteria\nKeep line breaks",
+  );
+  assert.equal(
+    store.updateTask(9, { ...input, description: "a".repeat(5001) }).ok,
+    false,
+  );
 });

@@ -11,9 +11,18 @@ export const taskTitleSchema = z
   .min(1, { error: "Enter a task title." })
   .max(120, { error: "Keep the title to 120 characters or fewer." });
 
+export const taskDescriptionSchema = z
+  .string()
+  .trim()
+  .max(5000, {
+    error: "Keep the description to 5,000 characters or fewer.",
+  })
+  .default("");
+
 export function createTaskSchema({ epics, assignees }: TaskOptions) {
   return z.object({
     title: taskTitleSchema,
+    description: taskDescriptionSchema,
     status: z.enum(["todo", "in_progress", "in_review", "done"], {
       error: "Choose a valid status.",
     }),
