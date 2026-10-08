@@ -7,6 +7,12 @@ import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog
 import { TaskDetailsDialog } from "@/features/tasks/components/task-details-dialog";
 import { DragDropProvider } from "@dnd-kit/react";
 import { DraggableTaskCard } from "@/features/tasks/components/draggable-task-card";
+import { TaskFilterToolbar } from "./task-filters";
+import {
+  defaultTaskFilters,
+  filterTasks,
+  hasTaskFilters,
+} from "@/features/tasks/lib/task-filters";
 import { TaskCard } from "./task-card";
 import { BoardColumn } from "@/features/tasks/components/board-column";
 import {
@@ -48,8 +54,7 @@ export function TaskBoard({
     id: number;
     action: "archive" | "restore" | "delete";
   } | null>(null);
-  const [search, setSearch] = useState("");
-  const [epic, setEpic] = useState("");
+  const [filters, setFilters] = useState(defaultTaskFilters);
   const assignees = [
     ...new Set(
       [...initialTasks, ...tasks].flatMap((task) =>
@@ -57,17 +62,10 @@ export function TaskBoard({
       ),
     ),
   ];
-  const query = search.trim().toLowerCase();
   const eligibleTasks = tasks.filter((task) =>
     mode === "archive" ? task.archived : !task.archived,
   );
-  const filteredTasks = eligibleTasks.filter(
-    (task) =>
-      (!epic || task.epic === epic) &&
-      (!query ||
-        task.title.toLowerCase().includes(query) ||
-        `ORB-${task.id}`.toLowerCase().includes(query)),
-  );
+  const filteredTasks = filterTasks(eligibleTasks, filters);
 
   return (
     <div ref={boardRef}>
@@ -116,52 +114,13 @@ export function TaskBoard({
           </button>
         )}
       </p>
-      <div className="mb-6 flex flex-wrap items-end gap-3">
-        <label className="flex w-full flex-col gap-2 sm:w-64">
-          <span className="text-xs font-medium text-base-content/70">
-            Search tasks
-          </span>
-          <input
-            type="search"
-            className="input input-sm h-10 w-full rounded-md border-base-300 bg-base-200/60 text-xs"
-            placeholder="Search by title or task ID…"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-        <div className="flex min-w-0 flex-col gap-2">
-          <label
-            htmlFor="board-epic"
-            className="text-xs font-medium text-base-content/70"
-          >
-            Epic
-          </label>
-          <select
-            id="board-epic"
-            className="select select-sm h-10 w-48 max-w-full rounded-md border-base-300 bg-base-100 text-xs"
-            value={epic}
-            onChange={(event) => setEpic(event.target.value)}
-          >
-            <option value="">All epics</option>
-            {epics.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
-        {(search || epic) && (
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm h-10 text-xs"
-            onClick={() => {
-              setSearch("");
-              setEpic("");
-            }}
-          >
-            Clear filters
-          </button>
-        )}
+      <TaskFilterToolbar
+        filters={filters}
+        onChange={setFilters}
+        epics={epics}
+        assignees={assignees}
+      />
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <p
           role="status"
           className="pb-2 text-xs text-base-content/60 sm:ml-auto"
@@ -181,8 +140,7 @@ export function TaskBoard({
           onCreate={(input) => {
             const result = createTask(input);
             if (result.ok) {
-              setSearch("");
-              setEpic("");
+              setFilters(defaultTaskFilters);
               setNotice("Task created and saved in this browser.");
             }
             return result;
@@ -283,7 +241,7 @@ export function TaskBoard({
                       </ul>
                     ) : (
                       <p className="rounded-md border border-dashed border-base-300 px-4 py-8 text-center text-xs leading-6 text-base-content/65">
-                        {search || epic
+                        {hasTaskFilters(filters)
                           ? "No matching tasks"
                           : "No tasks here yet"}
                       </p>
