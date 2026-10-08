@@ -98,11 +98,12 @@ const taskFixtures = [
     priority: "medium",
     assignee: "Maya Chen",
   },
-] satisfies Omit<Task, "subtasks" | "archived">[];
+] satisfies Omit<Task, "subtasks" | "archived" | "placement">[];
 
 export const sampleTasks: Task[] = taskFixtures.map((task) => ({
   ...task,
   archived: false,
+  placement: "board",
   subtasks:
     task.id === 14
       ? [

@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { Task, TaskStatus } from "@/features/tasks/schemas/types/task";
+import type {
+  Task,
+  TaskStatus,
+  TaskPlacement,
+} from "@/features/tasks/schemas/types/task";
 import {
   createTaskSchema,
   taskTitleSchema,
@@ -16,6 +20,7 @@ const subtaskSchema = z
 const savedTaskSchema: z.ZodType<Task> = z.object({
   id: idSchema,
   archived: z.boolean().default(false),
+  placement: z.enum(["board", "backlog"]).default("board"),
   title: taskTitleSchema,
   status: z.enum(["todo", "in_progress", "in_review", "done"]),
   priority: z.enum(["low", "medium", "high"]),
@@ -169,6 +174,13 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
       };
     },
     load,
+    setPlacement(id: number, placement: TaskPlacement): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const task = snapshot.tasks.find((task) => task.id === id);
+      if (!task || task.archived) return missingTask;
+      return saveTask({ ...task, placement });
+    },
     setArchived(id: number, archived: boolean): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
@@ -206,7 +218,10 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
       if (task.status === status) return { ok: true };
       return saveTask({ ...task, status });
     },
-    createTask(input: CreateTaskInput): SaveResult {
+    createTask(
+      input: CreateTaskInput,
+      placement: TaskPlacement = "board",
+    ): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
       const validated = validateTask(input);
@@ -216,7 +231,7 @@ export function createTaskStore(seed: Task[], getStorage: () => StorageClient) {
       if (!Number.isSafeInteger(id))
         return { ok: false, error: "A new task ID could not be assigned." };
       return save([
-        { ...validated.data, id, subtasks: [], archived: false },
+        { ...validated.data, id, subtasks: [], archived: false, placement },
         ...snapshot.tasks,
       ]);
     },

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 const links = [
+  { href: "/backlog", label: "Backlog", icon: "≡" },
   { href: "/tasks", label: "Board", icon: "▥" },
   { href: "/tasks/archive", label: "Archive", icon: "□" },
 ];
