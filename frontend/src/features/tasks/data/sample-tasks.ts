@@ -1,7 +1,7 @@
 import type { Task } from "@/features/tasks/types/task";
 
 // Frontend fixtures only; this board model is not the current backend contract.
-export const sampleTasks = [
+const taskFixtures = [
   {
     id: 12,
     title: "Design a welcoming sign-in experience",
@@ -98,4 +98,32 @@ export const sampleTasks = [
     priority: "medium",
     assignee: "Maya Chen",
   },
-] satisfies Task[];
+] satisfies Omit<
+  Task,
+  | "subtasks"
+  | "archived"
+  | "placement"
+  | "description"
+  | "labels"
+  | "dueDate"
+  | "activity"
+  | "sprintId"
+>[];
+
+export const sampleTasks: Task[] = taskFixtures.map((task) => ({
+  ...task,
+  activity: [],
+  description: "",
+  labels: [],
+  dueDate: null,
+  archived: false,
+  placement: "board",
+  sprintId: null,
+  subtasks:
+    task.id === 14
+      ? [
+          { id: 1, title: "Define the subtask fields", completed: false },
+          { id: 2, title: "Add completion tracking", completed: false },
+        ]
+      : [],
+}));

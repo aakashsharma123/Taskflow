@@ -1,3 +1,5 @@
+import { TaskMetadata } from "./task-metadata";
+import type { ReactNode } from "react";
 import type { Task } from "@/features/tasks/types/task";
 
 const epicStyles: Record<string, string> = {
@@ -12,7 +14,18 @@ const priorityStyles = {
   low: "bg-slate-100 text-slate-700",
 };
 
-export function TaskCard({ task }: { task: Task }) {
+export function TaskCard({
+  task,
+  onOpen,
+  dragHandle,
+}: {
+  task: Task;
+  onOpen: () => void;
+  dragHandle?: ReactNode;
+}) {
+  const completedSubtasks = task.subtasks.filter(
+    (subtask) => subtask.completed,
+  ).length;
   const initials = task.assignee
     ?.split(" ")
     .map((part) => part[0])
@@ -29,25 +42,37 @@ export function TaskCard({ task }: { task: Task }) {
           />
           ORB-{task.id}
         </span>
-        {task.status === "done" && (
-          <span className="flex items-center gap-1 text-[10px] font-medium text-teal-800">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              className="size-3.5"
-            >
-              <circle cx="8" cy="8" r="6" />
-              <path d="m5 8 2 2 4-4" />
-            </svg>
-            Done
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          {task.status === "done" && (
+            <span className="flex items-center gap-1 text-[10px] font-medium text-teal-800">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="size-3.5"
+              >
+                <circle cx="8" cy="8" r="6" />
+                <path d="m5 8 2 2 4-4" />
+              </svg>
+              Done
+            </span>
+          )}
+          {dragHandle}
+        </div>
       </div>
       <h3 className="min-h-12 text-[13px] leading-6 font-semibold tracking-[-0.01em] [overflow-wrap:anywhere]">
-        {task.title}
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          data-task-id={task.id}
+          aria-label={`Open ORB-${task.id}: ${task.title}`}
+          onClick={onOpen}
+          className="w-full cursor-pointer rounded-sm text-left hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-4"
+        >
+          {task.title}
+        </button>
       </h3>
       <div className="mt-4 mb-5 min-h-7">
         {task.epic && (
@@ -74,6 +99,20 @@ export function TaskCard({ task }: { task: Task }) {
           </span>
         )}
       </div>
+      <TaskMetadata task={task} />
+      {task.subtasks.length > 0 && (
+        <div className="mb-4 flex items-center gap-3">
+          <progress
+            aria-label={`ORB-${task.id} completed subtasks`}
+            className="progress progress-primary h-1 min-w-0 flex-1"
+            value={completedSubtasks}
+            max={task.subtasks.length}
+          />
+          <span className="shrink-0 text-[10px] font-medium text-base-content/75">
+            {completedSubtasks}/{task.subtasks.length} subtasks
+          </span>
+        </div>
+      )}
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-base-300/60 pt-3">
         <span
           className="flex min-w-0 items-center gap-2"

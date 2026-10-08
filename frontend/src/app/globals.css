@@ -38,7 +38,7 @@ body {
   color: var(--color-base-content);
 }
 
-:where(a, button, summary, input, select):focus-visible {
+:where(a, button, summary, input, select, textarea):focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 4px;
 }
@@ -82,8 +82,20 @@ body {
 
 @media (pointer: coarse) {
   input.input,
-  select.select {
+  select.select,
+  textarea.textarea {
     font-size: 16px;
     min-height: 44px;
   }
+}
+
+/* Keep native controls consistent inside the task and epic composers. */
+.composer-control:focus,
+.composer-control:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 65%, transparent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.composer-control::placeholder {
+  color: color-mix(in srgb, var(--color-base-content) 65%, transparent);
 }

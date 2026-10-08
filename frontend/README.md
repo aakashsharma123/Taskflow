@@ -1,12 +1,10 @@
 # Orbit frontend
 
-Next.js App Router with strict TypeScript, Tailwind CSS, DaisyUI, ESLint, and
-Prettier. Poppins (400, 500, and 600) is self-hosted through Fontsource. The `@/*`
-import alias resolves to `src/*`.
+Frontend-only project workspace using Next.js App Router, strict TypeScript,
+Ark UI dialogs, Tailwind CSS, DaisyUI, Zod and dnd-kit. Poppins is self-hosted.
+The `@/*` alias resolves to `src/*`.
 
 ## Run locally
-
-From this directory:
 
 ```bash
 npm ci
@@ -14,40 +12,105 @@ npm run dev
 ```
 
 Open http://localhost:3000. The home route redirects to `/tasks`.
-The current checkpoint is a responsive workspace shell and a four-column task board
-using local sample data. Search and epic filtering work locally. Cards are read-only;
-dragging and task details will come later. No backend or environment variables are required.
-The New task button opens an Ark UI dialog with title, status, priority, epic, and
-assignee fields. This checkpoint is a form preview: submission is disabled until
-validation and local saving are implemented. Options come from the sample tasks.
-The frontend board uses a status field; the existing backend still uses completed.
+No backend or environment variables are required.
+
+## Features
+
+- **Board (`/tasks`)**: create/edit tasks, epics and one-level subtasks. Move cards
+  between columns using their handles. Space starts a keyboard drag, arrows move
+  it, Space drops it and Escape cancels. The task status field is an alternative.
+- **Task details**: optional plain text descriptions (5,000 characters), up to
+  five unique labels (24 characters each), and calendar due dates. Unfinished,
+  unarchived work becomes overdue after its due date in the user's local day.
+- **Filters**: combine title/ID search, epic, assignee, priority, status, label,
+  due date and sprint. Sort by creation ID, priority, title or due date, with
+  undated work last. Sorting does not reorder saved data.
+- **Activity**: the latest 100 saved events per task cover field changes, subtasks,
+  sprint membership and lifecycle actions. Events save with the task; failed writes
+  and no-op changes create no events. This is local history, not an authenticated
+  audit log.
+- **Backlog (`/backlog`)**: capture ideas or park existing work. Moving tasks
+  between Backlog and Board preserves status and subtasks. Remove a task from
+  its active sprint before parking it.
+- **Sprints (`/sprints`)**: create a dated sprint with a goal and assign backlog
+  tasks. Starting moves its scope to Board; only one sprint can be active.
+  Completion requires confirmation, saves a summary and returns unfinished
+  tasks to Backlog with their statuses and children intact. Completed summaries
+  stay fixed when tasks are later reopened or deleted. Dates describe the planned
+  schedule; start and completion are explicit actions.
+- **Archive (`/tasks/archive`)**: archive tasks from their details and restore them
+  later. Archive/delete require confirmation and discard unsaved form changes.
+  Archiving removes sprint membership. Undo is available for the most recent
+  lifecycle action in the current view. Deleted records are retained in local
+  storage for undo and to avoid reusing IDs.
+- **Dashboard (`/dashboard`)**: saved task totals, Board workflow, epic progress
+  and daily completed-task totals. History records UTC days when changes are
+  successfully saved, keeping the newest 90 daily records. Earlier days are
+  unknown; unchanged days carry the last known total. Completed totals include
+  archived work and can decrease when tasks are reopened or deleted.
+- **Settings (`/settings`)**: project name, up to 50 local assignee names, and
+  apricot, sage or lavender accents. Confirmed member removal unassigns live,
+  archived and deleted undo records together. These are local display names,
+  not accounts or invitations. Appearance also applies to portal dialogs.
+
+Subtask changes save immediately without changing the parent status. Sprint
+assignment and task location actions also save immediately and discard unsaved
+form edits, as explained beside those controls. Creating unused epics and members
+persists them too. The app starts with clearly labeled sample tasks.
+
+## Storage and boundaries
+
+Zod checks persisted data before loading. Existing workspaces migrate with defaults
+for new task fields, catalogs, sprints and settings; history is not invented.
+Read failures pause mutations, while write failures keep drafts for retry.
+One workspace provider owns the store across all routes. Same-tab updates appear
+immediately, storage events synchronize other tabs, and window focus refreshes
+saved changes. Mutations reload the latest snapshot before writing.
+
+Browser storage has no atomic transaction between concurrent writers in different
+tabs; this is a local workspace, not a shared collaboration service.
+Storage is scoped to the browser and origin and does not sync across devices.
+The existing backend uses a different task contract and is unchanged.
+
+## Structure
+
+- `src/app/(workspace)/`: thin Server Component routes and one shared shell layout.
+  The route group does not change URLs or add a second sidebar.
+- `src/shared/components/`: shell and active project navigation.
+- `src/shared/ui/`: reusable Ark UI dialog surface.
+- `src/features/workspace/`: shared store provider and persisted workspace schema.
+- `src/features/tasks/components/task-workspace.tsx`: client controller composing
+  filters, dialogs and the board/list views.
+- `src/features/tasks/components/kanban-board.tsx`: drag/drop presentation.
+- `src/features/tasks/components/task-form.tsx`: shared create/edit form.
+- `src/features/tasks/schemas/`: task and metadata Zod validation rules.
+- `src/features/tasks/types/`: task, status, placement, activity and subtask types.
+- `src/features/tasks/store/`: persistence, task operations and saved history.
+- `src/features/tasks/hooks/`: access to the shared workspace store.
+- `src/features/tasks/lib/`: pure filtering, sorting and calendar-date rules.
+- `src/features/sprints/`: sprint forms, cards, schemas, types and pure commands.
+- `src/features/settings/`: settings forms, member management and accent options.
+- `src/features/epics/`: epic dialog and validation.
+- `src/features/dashboard/`: dashboard components and pure summary calculations.
+
+Tests sit beside the schema, store and calculation code they verify.
+TanStack Query is deferred until an API feature needs server-state caching. The
+browser store already owns persistence; no additional state layer is needed.
 
 ## Checks
 
 ```bash
 npm run lint
+npm run test
 npm run typecheck
 npm run format:check
 npm run build
 ```
 
-If your execution environment blocks Turbopack's local worker ports, run
-`npm run build -- --webpack` to verify the production build with Webpack.
-Use `npm run format` to apply formatting.
+Schema/store/summary tests use Node's test runner through tsx. If the environment
+blocks Turbopack worker ports, use `npm run build -- --webpack`. Apply formatting
+with `npm run format`.
 
-## Review guide
-
-- `src/app/layout.tsx`: root layout, font imports, and metadata.
-- `src/app/globals.css`: theme tokens, base styles, and workspace decoration.
-- `src/shared/components/workspace-shell.tsx`: desktop sidebar, mobile navigation,
-  header, and skip link. Mobile navigation uses native disclosure behavior.
-- `src/app/tasks/layout.tsx`: applies the workspace shell to task routes.
-- `src/app/tasks/page.tsx`: board heading and sample data composition.
-- `src/features/tasks/components/task-board.tsx`: columns and local search/filter state.
-- `src/features/tasks/components/task-card.tsx`: reusable card with typed task props.
-- `src/features/tasks/types/task.ts`: the current task data contract.
-- `src/features/tasks/data/sample-tasks.ts`: explicitly labeled preview data.
-
-The shell and route are Server Components. TaskBoard is a Client Component because
-its search and epic filters use local React state.
-Additional libraries will be introduced with their first use cases.
+Each feature has a separate stacked branch and local commit. PRs should target the
+preceding feature branch until it merges, then be retargeted to the main branch.
+Commit subjects follow `type / short description`, with a short structural body.
