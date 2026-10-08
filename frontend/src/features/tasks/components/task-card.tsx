@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Task } from "@/features/tasks/types/task";
+import type { Task } from "@/features/tasks/schemas/types/task";
 
 const epicStyles: Record<string, string> = {
   Authentication: "bg-violet-50 text-violet-800",

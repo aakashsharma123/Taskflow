@@ -14,4 +14,5 @@ export type Task = {
   priority: "high" | "medium" | "low";
   assignee: string | null;
   subtasks: Subtask[];
+  archived: boolean;
 };

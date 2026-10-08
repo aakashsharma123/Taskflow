@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import { subtaskTitleSchema } from "@/features/tasks/schemas/subtask-schema";
-import type { Task } from "@/features/tasks/types/task";
+import type { Task } from "@/features/tasks/schemas/types/task";
 import type { SaveResult } from "@/features/tasks/store/task-store";
 
 type SubtaskListProps = {

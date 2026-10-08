@@ -4,7 +4,7 @@ import { useId, useRef, useState, type FormEvent } from "react";
 import { Dialog } from "@ark-ui/react/dialog";
 import { DialogPanel } from "@/shared/ui/dialog-panel";
 import { createEpicSchema } from "@/features/epics/schemas/create-epic-schema";
-import type { Task } from "@/features/tasks/types/task";
+import type { Task } from "@/features/tasks/schemas/types/task";
 import type { SaveResult } from "@/features/tasks/store/task-store";
 
 type EpicsDialogProps = {
