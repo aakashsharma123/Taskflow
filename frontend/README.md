@@ -18,14 +18,17 @@ The current checkpoint is a responsive workspace shell and a four-column task bo
 using local sample data. Search and epic filtering work locally. Cards are read-only;
 dragging and task details will come later. No backend or environment variables are required.
 The New task button opens an Ark UI dialog with title, status, priority, epic, and
-assignee fields. This checkpoint is a form preview: submission is disabled until
-validation and local saving are implemented. Options come from the sample tasks.
+assignee fields. Check details validates the form with Zod and shows field errors. Titles are trimmed
+and limited to 120 characters; epic and assignee values must match the available
+options or be empty. Empty selections become null. This checkpoint validates only;
+local saving comes next. Options come from the sample tasks.
 The frontend board uses a status field; the existing backend still uses completed.
 
 ## Checks
 
 ```bash
 npm run lint
+npm run test
 npm run typecheck
 npm run format:check
 npm run build
@@ -51,3 +54,8 @@ Use `npm run format` to apply formatting.
 The shell and route are Server Components. TaskBoard is a Client Component because
 its search and epic filters use local React state.
 Additional libraries will be introduced with their first use cases.
+
+Task validation lives in `src/features/tasks/schemas/create-task-schema.ts`. The
+dialog reads native form values and displays errors; the schema owns the rules.
+
+Schema tests use Node’s test runner through tsx to run TypeScript.
