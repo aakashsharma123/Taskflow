@@ -1,4 +1,4 @@
-import type { Task } from "@/features/tasks/schemas/types/task";
+import type { Task } from "@/features/tasks/types/task";
 
 // Frontend fixtures only; this board model is not the current backend contract.
 const taskFixtures = [

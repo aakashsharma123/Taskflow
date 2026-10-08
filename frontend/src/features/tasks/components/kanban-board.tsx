@@ -6,7 +6,7 @@ import {
   taskColumns,
   isTaskStatus,
 } from "@/features/tasks/constants/task-statuses";
-import type { Task, TaskStatus } from "@/features/tasks/schemas/types/task";
+import type { Task, TaskStatus } from "@/features/tasks/types/task";
 export function KanbanBoard({
   tasks,
   disabled,

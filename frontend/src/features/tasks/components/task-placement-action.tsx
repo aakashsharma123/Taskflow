@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { Task, TaskPlacement } from "@/features/tasks/schemas/types/task";
+import type { Task, TaskPlacement } from "@/features/tasks/types/task";
 import type { SaveResult } from "@/features/tasks/store/task-store";
 export function TaskPlacementAction({
   task,

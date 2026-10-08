@@ -1,4 +1,4 @@
-import type { TaskStatus } from "@/features/tasks/schemas/types/task";
+import type { TaskStatus } from "@/features/tasks/types/task";
 
 export const taskColumns = [
   { status: "todo", label: "To do", dot: "bg-slate-400" },

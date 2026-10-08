@@ -1,12 +1,10 @@
 # Orbit frontend
 
-Next.js App Router with strict TypeScript, Tailwind CSS, DaisyUI, ESLint, and
-Prettier. Poppins (400, 500, and 600) is self-hosted through Fontsource. The `@/*`
-import alias resolves to `src/*`.
+Frontend-only project workspace using Next.js App Router, strict TypeScript,
+Ark UI dialogs, Tailwind CSS, DaisyUI, Zod and dnd-kit. Poppins is self-hosted.
+The `@/*` alias resolves to `src/*`.
 
 ## Run locally
-
-From this directory:
 
 ```bash
 npm ci
@@ -14,21 +12,62 @@ npm run dev
 ```
 
 Open http://localhost:3000. The home route redirects to `/tasks`.
-The board starts with sample tasks. Create tasks, open their titles to edit details,
-and change status to move them between columns. Create epics through the Epics
-button, assign tasks to them, and use the epic filter to focus the board. Add and
-complete subtasks inside task details. Subtask changes save immediately; completing
-all subtasks does not change the parent task’s status.
+No backend or environment variables are required.
 
-The workspace is saved in this browser and synchronized across tabs. Saved data is
-checked with Zod before loading. Read failures pause changes; write failures leave
-drafts open for retry. Earlier saved tasks migrate with empty subtask lists and an
-epic catalog derived from their existing epic labels. Titles are trimmed and limited
-to 120 characters; epic names must be unique and at most 60 characters.
+## Features
 
-No backend or environment variables are required. The frontend uses status; the
-existing backend still uses completed. Browser storage is local to this browser and
-origin; it does not sync across devices.
+- **Board (`/tasks`)**: create/edit tasks, epics and one-level subtasks. Move cards
+  between columns using their handles. Space starts a keyboard drag, arrows move
+  it, Space drops it and Escape cancels. The task status field is an alternative.
+- **Filters**: combine title/ID search, epic, assignee, priority and status.
+  Sort by creation ID, priority or title. Sorting does not reorder saved data.
+- **Backlog (`/backlog`)**: capture ideas or park existing work. Moving tasks
+  between Backlog and Board preserves status and subtasks.
+- **Archive (`/tasks/archive`)**: archive tasks from their details and restore them
+  later. Archive/delete require confirmation and discard unsaved form changes.
+  Undo is available for the most recent lifecycle action in the current view.
+  Deleted records are retained in local storage for undo and to avoid reusing IDs.
+- **Dashboard (`/dashboard`)**: saved task totals, Board workflow, epic progress
+  and daily completed-task totals. History records UTC days when changes are
+  successfully saved, keeping the newest 90 daily records. Earlier days are
+  unknown; unchanged days carry the last known total. Completed totals include
+  archived work and can decrease when tasks are reopened or deleted.
+
+Subtask updates save immediately without changing the parent status. Creating
+unused epics persists them too. The app starts with clearly labeled sample tasks.
+
+## Storage and boundaries
+
+Zod checks persisted data before loading. Existing workspaces migrate with defaults
+for subtasks, epic catalogs, archive and placement; history is not invented.
+Read failures pause mutations, while write failures keep drafts for retry. Storage
+changes synchronize across tabs, and mutations reload the latest saved snapshot.
+Browser storage has no atomic transaction between concurrent writers in different
+tabs; this is a local workspace, not a shared collaboration service.
+Storage is scoped to the browser and origin and does not sync across devices.
+The existing backend uses a different task contract and is unchanged.
+
+## Structure
+
+- `src/app/(workspace)/`: thin Server Component routes and one shared shell layout.
+  The route group does not change URLs or add a second sidebar.
+- `src/shared/components/`: shell and active project navigation.
+- `src/shared/ui/`: reusable Ark UI dialog surface.
+- `src/features/tasks/components/task-workspace.tsx`: client controller composing
+  filters, dialogs and the board/list views.
+- `src/features/tasks/components/kanban-board.tsx`: drag/drop presentation.
+- `src/features/tasks/components/task-form.tsx`: shared create/edit form.
+- `src/features/tasks/schemas/`: Zod validation rules.
+- `src/features/tasks/types/`: task, status, placement and subtask TypeScript types.
+- `src/features/tasks/store/`: validated persistence, task operations and history.
+- `src/features/tasks/hooks/`: React subscription to the task store.
+- `src/features/tasks/lib/`: pure filtering/sorting rules and tests.
+- `src/features/epics/`: epic dialog and validation.
+- `src/features/dashboard/`: dashboard components and pure summary calculations.
+
+TanStack Query is deferred until an API feature needs server-state caching. The
+current browser store already owns persistence, so a second state layer is not
+needed for these features.
 
 ## Checks
 
@@ -40,40 +79,10 @@ npm run format:check
 npm run build
 ```
 
-If your execution environment blocks Turbopack's local worker ports, run
-`npm run build -- --webpack` to verify the production build with Webpack.
-Use `npm run format` to apply formatting.
+Schema/store/summary tests use Node's test runner through tsx. If the environment
+blocks Turbopack worker ports, use `npm run build -- --webpack`. Apply formatting
+with `npm run format`.
 
-## Review guide
-
-- `src/app/layout.tsx`: root layout, font imports, and metadata.
-- `src/app/globals.css`: theme tokens, base styles, and workspace decoration.
-- `src/shared/components/workspace-shell.tsx`: desktop sidebar, mobile navigation,
-  header, and skip link. Mobile navigation uses native disclosure behavior.
-- `src/app/tasks/layout.tsx`: applies the workspace shell to task routes.
-- `src/app/tasks/page.tsx`: board heading and sample data composition.
-- `src/features/tasks/components/task-board.tsx`: columns and local search/filter state.
-- `src/features/tasks/components/task-card.tsx`: task summary, details trigger, and subtask progress.
-- `src/features/tasks/components/task-form.tsx`: shared create/edit form and field errors.
-- `src/features/tasks/components/task-details-dialog.tsx`: editing and subtask composition.
-- `src/features/tasks/components/subtask-list.tsx`: one-level subtask controls.
-- `src/features/epics/`: epic dialog and name validation.
-- `src/shared/ui/dialog-panel.tsx`: shared Ark UI dialog surface.
-- `src/features/tasks/types/task.ts`: the current task data contract.
-- `src/features/tasks/data/sample-tasks.ts`: explicitly labeled preview data.
-
-The shell and route are Server Components. TaskBoard is a Client Component because
-its search and epic filters use local React state.
-Additional libraries will be introduced with their first use cases.
-
-Task validation lives in `src/features/tasks/schemas/create-task-schema.ts`. The
-dialog reads native form values and displays errors; the schema owns the rules.
-
-Schema and store tests use Node’s test runner through tsx to run TypeScript.
-
-Browser persistence lives in `features/tasks/store/task-store.ts`; the React
-subscription lives in `features/tasks/hooks/use-task-store.ts`.
-
-Move cards between columns using the drag handle. dnd-kit supports pointer, touch,
-and keyboard input: Space starts a drag, arrows move it, Space drops it, and Escape
-cancels. The status field in task details is also available for direct changes.
+Each feature has a separate stacked branch and local commit. PRs should target the
+preceding feature branch until it merges, then be retargeted to the main branch.
+Commit subjects follow `type / short description`, with a short structural body.
