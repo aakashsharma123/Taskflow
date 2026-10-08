@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Task } from "@/features/tasks/types/task";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 
 type Action = "archive" | "restore" | "delete";
 export function TaskLifecycleActions({

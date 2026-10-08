@@ -1,5 +1,6 @@
 "use client";
 import { useWorkspace } from "@/features/workspace/components/workspace-provider";
+import { WorkspaceData } from "./workspace-data";
 import { ProjectSettingsForm } from "./project-settings-form";
 import { TeamMembers } from "./team-members";
 export function WorkspaceSettings() {
@@ -49,6 +50,7 @@ export function WorkspaceSettings() {
         onAdd={addMember}
         onRemove={removeMember}
       />
+      <WorkspaceData />
       <p className="text-[11px] leading-6 text-base-content/60">
         Saved in this browser. Team names are used for assignments; they do not
         create accounts or send invitations.

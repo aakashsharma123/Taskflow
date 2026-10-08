@@ -1,6 +1,9 @@
 import { commentBodySchema } from "@/features/tasks/schemas/task-comment-schema";
 import * as sprintCommands from "@/features/sprints/lib/sprint-commands";
-import { workspaceSchema } from "@/features/workspace/schemas/workspace-schema";
+import {
+  assertWorkspaceSize,
+  parseWorkspaceBackup,
+} from "@/features/workspace/lib/workspace-backup";
 import {
   projectSettingsSchema,
   memberNameSchema,
@@ -9,8 +12,11 @@ import {
 import type { WorkspaceSettings } from "@/features/settings/types/workspace-settings";
 import type { CreateSprintInput } from "@/features/sprints/schemas/sprint-schema";
 import type { Sprint } from "@/features/sprints/types/sprint";
-import { recordTaskActivity } from "./task-activity";
-import { recordWorkspaceDay, type DailySummary } from "./workspace-history";
+import { recordTaskActivity } from "@/features/tasks/lib/task-activity";
+import {
+  recordWorkspaceDay,
+  type DailySummary,
+} from "@/features/dashboard/lib/workspace-history";
 import type {
   Task,
   TaskStatus,
@@ -23,9 +29,10 @@ import {
 import { subtaskTitleSchema } from "@/features/tasks/schemas/subtask-schema";
 import { createEpicSchema } from "@/features/epics/schemas/create-epic-schema";
 
-export const TASK_STORAGE_KEY = "orbit.workspace.v1";
+export const WORKSPACE_STORAGE_KEY = "orbit.workspace.v1";
 
 type Snapshot = {
+  workspaceId: string | null;
   tasks: Task[];
   removedTasks: Task[];
   history: DailySummary[];
@@ -43,12 +50,13 @@ const taskEpics = (tasks: Task[]) => [
 const nextId = (items: { id: number }[]) =>
   items.reduce((max, item) => Math.max(max, item.id), 0) + 1;
 
-export function createTaskStore(
+export function createWorkspaceStore(
   seed: Task[],
   getStorage: () => StorageClient,
   now: () => Date = () => new Date(),
 ) {
   const serverSnapshot: Snapshot = {
+    workspaceId: null,
     tasks: seed,
     removedTasks: [],
     history: [],
@@ -73,57 +81,15 @@ export function createTaskStore(
 
   function load() {
     try {
-      const raw = getStorage().getItem(TASK_STORAGE_KEY);
-      const saved =
-        raw === null ? null : workspaceSchema.parse(JSON.parse(raw));
+      const raw = getStorage().getItem(WORKSPACE_STORAGE_KEY);
+      const saved = raw === null ? null : parseWorkspaceBackup(raw);
       const tasks = saved?.tasks ?? seed;
       const removedTasks = saved?.removedTasks ?? [];
-      const allTasks = [...tasks, ...removedTasks];
-      if (new Set(allTasks.map((task) => task.id)).size !== allTasks.length)
-        throw new Error("Duplicate task IDs");
-      const epics = saved?.epics ?? taskEpics(allTasks);
-      if (
-        allTasks.some(
-          (task) => task.epic !== null && !epics.includes(task.epic),
-        )
-      )
-        throw new Error("Unknown epic reference");
+      const epics = saved?.epics ?? serverSnapshot.epics;
       const sprints = saved?.sprints ?? [];
-      if (
-        allTasks.some(
-          (task) =>
-            task.sprintId !== null &&
-            !sprints.some((sprint) => sprint.id === task.sprintId),
-        )
-      )
-        throw new Error("Unknown sprint reference");
-      if (
-        tasks.some(
-          (task) =>
-            task.sprintId !== null &&
-            (task.archived ||
-              (sprints.find((sprint) => sprint.id === task.sprintId)?.status ===
-                "active" &&
-                task.placement !== "board")),
-        )
-      )
-        throw new Error("Invalid sprint membership");
-      const settings = saved?.settings ?? {
-        ...serverSnapshot.settings,
-        members: [
-          ...new Set(
-            allTasks.flatMap((task) => (task.assignee ? [task.assignee] : [])),
-          ),
-        ],
-      };
-      if (
-        allTasks.some(
-          (task) =>
-            task.assignee !== null && !settings.members.includes(task.assignee),
-        )
-      )
-        throw new Error("Unknown member reference");
+      const settings = saved?.settings ?? serverSnapshot.settings;
       snapshot = {
+        workspaceId: saved?.workspaceId ?? null,
         tasks,
         removedTasks,
         epics,
@@ -144,7 +110,7 @@ export function createTaskStore(
     emit();
   }
 
-  function prepare(): SaveResult | undefined {
+  function prepare(): Extract<SaveResult, { ok: false }> | undefined {
     if (!snapshot.ready)
       return {
         ok: false,
@@ -186,19 +152,20 @@ export function createTaskStore(
         tasks,
         timestamp.slice(0, 10),
       );
-      getStorage().setItem(
-        TASK_STORAGE_KEY,
-        JSON.stringify({
-          version: 1,
-          tasks,
-          epics,
-          removedTasks,
-          history,
-          sprints,
-          settings,
-        }),
-      );
+      const data = JSON.stringify({
+        version: 1,
+        workspaceId: snapshot.workspaceId,
+        tasks,
+        epics,
+        removedTasks,
+        history,
+        sprints,
+        settings,
+      });
+      assertWorkspaceSize(data);
+      getStorage().setItem(WORKSPACE_STORAGE_KEY, data);
       snapshot = {
+        workspaceId: snapshot.workspaceId,
         tasks,
         removedTasks,
         epics,
@@ -260,6 +227,80 @@ export function createTaskStore(
       };
     },
     load,
+    exportWorkspace():
+      { ok: true; data: string } | { ok: false; error: string } {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const { tasks, removedTasks, epics, sprints, settings, history } =
+        snapshot;
+      return {
+        ok: true,
+        data: JSON.stringify({
+          version: 1,
+          tasks,
+          removedTasks,
+          epics,
+          sprints,
+          settings,
+          history,
+        }),
+      };
+    },
+    importWorkspace(raw: string): SaveResult {
+      // Explicit replacement also permits recovery from corrupt local storage.
+      let imported: ReturnType<typeof parseWorkspaceBackup>;
+      try {
+        imported = parseWorkspaceBackup(raw);
+      } catch {
+        return {
+          ok: false,
+          error:
+            "This file is not a valid Orbit workspace backup. Your current data has not changed.",
+        };
+      }
+      try {
+        imported = { ...imported, workspaceId: crypto.randomUUID() };
+        const data = JSON.stringify(imported);
+        assertWorkspaceSize(data);
+        getStorage().setItem(WORKSPACE_STORAGE_KEY, data);
+        snapshot = { ...imported, ready: true, error: null };
+        emit();
+        return { ok: true };
+      } catch {
+        return {
+          ok: false,
+          error:
+            "The backup could not be saved. Check browser storage and try again.",
+        };
+      }
+    },
+    clearWorkspace(): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const { settings } = snapshot;
+      const data = {
+        version: 1 as const,
+        workspaceId: crypto.randomUUID(),
+        tasks: [],
+        removedTasks: [],
+        epics: [],
+        sprints: [],
+        history: [],
+        settings,
+      };
+      try {
+        getStorage().setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(data));
+        snapshot = { ...data, ready: true, error: null };
+        emit();
+        return { ok: true };
+      } catch {
+        return {
+          ok: false,
+          error:
+            "Your workspace could not be cleared. Check browser storage and try again.",
+        };
+      }
+    },
     selectMember(name: string | null): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;

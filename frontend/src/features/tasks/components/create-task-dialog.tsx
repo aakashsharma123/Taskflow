@@ -5,7 +5,7 @@ import { Dialog } from "@ark-ui/react/dialog";
 import { DialogPanel } from "@/shared/ui/dialog-panel";
 import { TaskForm } from "@/features/tasks/components/task-form";
 import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schema";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 
 type CreateTaskDialogProps = {
   defaultEpic?: string;

@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createTaskStore, TASK_STORAGE_KEY } from "./task-store";
-import type { Task } from "../types/task";
-import type { CreateTaskInput } from "../schemas/create-task-schema";
+import { createWorkspaceStore, WORKSPACE_STORAGE_KEY } from "./workspace-store";
+import type { Task } from "@/features/tasks/types/task";
+import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schema";
 
 const seed: Task[] = [
   {
@@ -45,7 +45,7 @@ function memoryStorage() {
 
 test("creates unique task IDs and restores saved tasks", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.createTask(input).ok, true);
   assert.equal(store.createTask(input).ok, true);
@@ -53,7 +53,7 @@ test("creates unique task IDs and restores saved tasks", () => {
     store.getSnapshot().tasks.map((task) => task.id),
     [11, 10, 9],
   );
-  const restored = createTaskStore(seed, () => storage);
+  const restored = createWorkspaceStore(seed, () => storage);
   restored.load();
   assert.deepEqual(restored.getSnapshot().tasks, store.getSnapshot().tasks);
 });
@@ -61,7 +61,7 @@ test("creates unique task IDs and restores saved tasks", () => {
 test("failed writes keep previous data and permit retry", () => {
   const memory = memoryStorage();
   let fail = true;
-  const store = createTaskStore(seed, () => ({
+  const store = createWorkspaceStore(seed, () => ({
     ...memory,
     setItem(key, value) {
       if (fail) throw new Error("Quota");
@@ -78,18 +78,18 @@ test("failed writes keep previous data and permit retry", () => {
 test("invalid saved data is preserved and cannot be overwritten", () => {
   const storage = memoryStorage();
   const broken = JSON.stringify({ version: 1, tasks: [...seed, ...seed] });
-  storage.setItem(TASK_STORAGE_KEY, broken);
-  const store = createTaskStore(seed, () => storage);
+  storage.setItem(WORKSPACE_STORAGE_KEY, broken);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert(store.getSnapshot().error);
   assert.equal(store.createTask(input).ok, false);
-  assert.equal(storage.getItem(TASK_STORAGE_KEY), broken);
+  assert.equal(storage.getItem(WORKSPACE_STORAGE_KEY), broken);
 });
 
 test("fresh reads include another tab's changes", () => {
   const storage = memoryStorage();
-  const first = createTaskStore(seed, () => storage);
-  const second = createTaskStore(seed, () => storage);
+  const first = createWorkspaceStore(seed, () => storage);
+  const second = createWorkspaceStore(seed, () => storage);
   first.load();
   second.load();
   first.createTask(input);
@@ -102,7 +102,7 @@ test("fresh reads include another tab's changes", () => {
 
 test("updates a task without changing its ID or unrelated tasks", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   store.createTask(input);
   assert.equal(
@@ -118,7 +118,7 @@ test("updates a task without changing its ID or unrelated tasks", () => {
     "New task",
   );
   assert.equal(store.updateTask(999, input).ok, false);
-  const restored = createTaskStore(seed, () => storage);
+  const restored = createWorkspaceStore(seed, () => storage);
   restored.load();
   assert.equal(
     restored.getSnapshot().tasks.find((task) => task.id === 9)?.title,
@@ -128,11 +128,11 @@ test("updates a task without changing its ID or unrelated tasks", () => {
 
 test("epics survive refresh without tasks and can be assigned", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.createEpic("  Onboarding  ").ok, true);
   assert.equal(store.createEpic("onboarding").ok, false);
-  const restored = createTaskStore(seed, () => storage);
+  const restored = createWorkspaceStore(seed, () => storage);
   restored.load();
   assert.deepEqual(restored.getSnapshot().epics, ["Onboarding"]);
   assert.equal(restored.createTask({ ...input, epic: "Onboarding" }).ok, true);
@@ -144,7 +144,7 @@ test("epics survive refresh without tasks and can be assigned", () => {
 
 test("subtask completion persists without changing the parent status", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.addSubtask(9, "  Sketch the screen  ").ok, true);
   assert.equal(store.addSubtask(9, " ").ok, false);
@@ -158,7 +158,7 @@ test("subtask completion persists without changing the parent status", () => {
     store.updateTask(9, { ...input, title: "Updated parent" }).ok,
     true,
   );
-  const restored = createTaskStore(seed, () => storage);
+  const restored = createWorkspaceStore(seed, () => storage);
   restored.load();
   assert.deepEqual(restored.getSnapshot().tasks[0].subtasks, [
     { id: 1, title: "Sketch the screen", completed: true },
@@ -179,10 +179,10 @@ test("migrates tasks saved before epic catalogs and subtasks existed", () => {
     assignee: null,
   };
   storage.setItem(
-    TASK_STORAGE_KEY,
+    WORKSPACE_STORAGE_KEY,
     JSON.stringify({ version: 1, tasks: [legacy] }),
   );
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.getSnapshot().error, null);
   assert.deepEqual(store.getSnapshot().epics, ["Workspace"]);
@@ -202,18 +202,18 @@ test("rejects invalid hierarchy and preserves the saved blob", () => {
     ],
     epics: [],
   });
-  storage.setItem(TASK_STORAGE_KEY, invalid);
-  const store = createTaskStore(seed, () => storage);
+  storage.setItem(WORKSPACE_STORAGE_KEY, invalid);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert(store.getSnapshot().error);
   assert.equal(store.createEpic("New epic").ok, false);
-  assert.equal(storage.getItem(TASK_STORAGE_KEY), invalid);
+  assert.equal(storage.getItem(WORKSPACE_STORAGE_KEY), invalid);
 });
 
 test("failed subtask writes leave completion and draft data unchanged", () => {
   const storage = memoryStorage();
   let fail = false;
-  const store = createTaskStore(seed, () => ({
+  const store = createWorkspaceStore(seed, () => ({
     ...storage,
     setItem(key, value) {
       if (fail) throw new Error("Quota");
@@ -231,7 +231,7 @@ test("failed subtask writes leave completion and draft data unchanged", () => {
 
 test("moving a task changes only its status and survives reload", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.moveTask(9, "done").ok, true);
   assert.deepEqual(
@@ -241,7 +241,7 @@ test("moving a task changes only its status and survives reload", () => {
       status: "done",
     },
   );
-  const restored = createTaskStore(seed, () => storage);
+  const restored = createWorkspaceStore(seed, () => storage);
   restored.load();
   assert.equal(restored.getSnapshot().tasks[0].status, "done");
   assert.equal(store.moveTask(999, "done").ok, false);
@@ -249,7 +249,7 @@ test("moving a task changes only its status and survives reload", () => {
 
 test("archive and deletion preserve children, undo and unique IDs", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   store.addSubtask(9, "Keep me");
   assert.equal(store.setArchived(9, true).ok, true);
@@ -272,7 +272,7 @@ test("archive and deletion preserve children, undo and unique IDs", () => {
 
 test("failed deletion retains the task", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => ({
+  const store = createWorkspaceStore(seed, () => ({
     ...storage,
     setItem() {
       throw new Error("Quota");
@@ -286,7 +286,7 @@ test("failed deletion retains the task", () => {
 
 test("backlog placement persists, keeps workflow and children, and cannot move archived work", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.createTask(input, "backlog").ok, true);
   store.addSubtask(10, "Preserve child");
@@ -304,7 +304,7 @@ test("backlog placement persists, keeps workflow and children, and cannot move a
 test("records actual daily totals and replaces the same UTC day", () => {
   const storage = memoryStorage();
   let time = "2026-10-05T23:00:00Z";
-  const store = createTaskStore(
+  const store = createWorkspaceStore(
     seed,
     () => storage,
     () => new Date(time),
@@ -336,7 +336,7 @@ test("records actual daily totals and replaces the same UTC day", () => {
 
 test("failed writes do not record a misleading completion history", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => ({
+  const store = createWorkspaceStore(seed, () => ({
     ...storage,
     setItem() {
       throw new Error("Quota");
@@ -351,10 +351,10 @@ test("legacy tasks migrate placement and archive without inventing history", () 
   const storage = memoryStorage();
   const legacy = { ...seed[0], archived: undefined, placement: undefined };
   storage.setItem(
-    TASK_STORAGE_KEY,
+    WORKSPACE_STORAGE_KEY,
     JSON.stringify({ version: 1, tasks: [legacy] }),
   );
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.getSnapshot().error, null);
   assert.equal(store.getSnapshot().tasks[0].archived, false);
@@ -365,13 +365,13 @@ test("legacy tasks migrate placement and archive without inventing history", () 
 test("descriptions migrate, persist, and survive archive and undo", () => {
   const storage = memoryStorage();
   storage.setItem(
-    TASK_STORAGE_KEY,
+    WORKSPACE_STORAGE_KEY,
     JSON.stringify({
       version: 1,
       tasks: [{ ...seed[0], description: undefined }],
     }),
   );
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.getSnapshot().tasks[0].description, "");
   assert.equal(
@@ -398,13 +398,13 @@ test("descriptions migrate, persist, and survive archive and undo", () => {
 test("metadata migrates and saves labels and calendar dates", () => {
   const storage = memoryStorage();
   storage.setItem(
-    TASK_STORAGE_KEY,
+    WORKSPACE_STORAGE_KEY,
     JSON.stringify({
       version: 1,
       tasks: [{ ...seed[0], labels: undefined, dueDate: undefined }],
     }),
   );
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.deepEqual(store.getSnapshot().tasks[0].labels, []);
   assert.equal(
@@ -420,7 +420,7 @@ test("metadata migrates and saves labels and calendar dates", () => {
 test("activity records saved changes and lifecycle undo without invented migration events", () => {
   const storage = memoryStorage();
   let fail = false;
-  const store = createTaskStore(
+  const store = createWorkspaceStore(
     seed,
     () => ({
       ...storage,
@@ -464,7 +464,7 @@ test("activity records saved changes and lifecycle undo without invented migrati
 
 test("task activity retains the newest 100 entries", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   for (let i = 0; i < 105; i++) store.moveTask(9, i % 2 ? "todo" : "done");
   store.load();
@@ -476,7 +476,7 @@ test("task activity retains the newest 100 entries", () => {
 
 test("sprint lifecycle starts assigned backlog work and carries unfinished tasks while preserving summary", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   const sprint = {
     name: "Sprint 1",
@@ -525,7 +525,7 @@ test("sprint lifecycle starts assigned backlog work and carries unfinished tasks
 test("failed sprint writes keep scope and lifecycle unchanged, and invalid references protect storage", () => {
   const storage = memoryStorage();
   let fail = false;
-  const store = createTaskStore(seed, () => ({
+  const store = createWorkspaceStore(seed, () => ({
     ...storage,
     setItem(key, value) {
       if (fail) throw new Error("Quota");
@@ -551,16 +551,16 @@ test("failed sprint writes keep scope and lifecycle unchanged, and invalid refer
     version: 1,
     tasks: [{ ...seed[0], sprintId: 999 }],
   });
-  storage.setItem(TASK_STORAGE_KEY, raw);
+  storage.setItem(WORKSPACE_STORAGE_KEY, raw);
   store.load();
   assert(store.getSnapshot().error);
   assert.equal(store.createTask(input).ok, false);
-  assert.equal(storage.getItem(TASK_STORAGE_KEY), raw);
+  assert.equal(storage.getItem(WORKSPACE_STORAGE_KEY), raw);
 });
 
 test("undo deletion respects a sprint started while the task was deleted", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   store.createSprint({
     name: "Sprint",
@@ -585,7 +585,7 @@ test("undo deletion respects a sprint started while the task was deleted", () =>
 
 test("settings and unused members persist, and removing a member unassigns live and undo records", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.addMember(" Alex Rivera ").ok, true);
   assert.equal(store.addMember("alex rivera").ok, false);
@@ -613,10 +613,10 @@ test("legacy member catalogs migrate from assignments and failed settings writes
   let fail = false;
   const assignedSeed = [{ ...seed[0], assignee: "Maya" }];
   storage.setItem(
-    TASK_STORAGE_KEY,
+    WORKSPACE_STORAGE_KEY,
     JSON.stringify({ version: 1, tasks: assignedSeed }),
   );
-  const store = createTaskStore(assignedSeed, () => ({
+  const store = createWorkspaceStore(assignedSeed, () => ({
     ...storage,
     setItem(key, value) {
       if (fail) throw new Error("Quota");
@@ -638,12 +638,12 @@ test("legacy member catalogs migrate from assignments and failed settings writes
 
 test("local member selection persists, validates names and clears when the member is removed", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   assert.equal(store.addMember("Maya").ok, true);
   assert.equal(store.selectMember("Missing").ok, false);
   assert.equal(store.selectMember("Maya").ok, true);
-  const restored = createTaskStore(seed, () => storage);
+  const restored = createWorkspaceStore(seed, () => storage);
   restored.load();
   assert.equal(restored.getSnapshot().settings.currentMember, "Maya");
   assert.equal(restored.removeMember("Maya").ok, true);
@@ -652,7 +652,7 @@ test("local member selection persists, validates names and clears when the membe
 
 test("epic rename and removal update live, archived and deleted records without removing work", () => {
   const storage = memoryStorage();
-  const store = createTaskStore(seed, () => storage);
+  const store = createWorkspaceStore(seed, () => storage);
   store.load();
   store.createEpic("Goal");
   store.createTask({ ...input, epic: "Goal" });
@@ -671,7 +671,7 @@ test("epic rename and removal update live, archived and deleted records without 
     store.getSnapshot().tasks.find((task) => task.id === id)?.archived,
     true,
   );
-  const restored = createTaskStore(seed, () => storage);
+  const restored = createWorkspaceStore(seed, () => storage);
   restored.load();
   assert.equal(restored.getSnapshot().error, null);
 });
@@ -679,7 +679,7 @@ test("epic rename and removal update live, archived and deleted records without 
 test("discussion preserves authors and drafts on failed writes, survives task undo and records only saved events", () => {
   const memory = memoryStorage();
   let fail = false;
-  const store = createTaskStore(seed, () => ({
+  const store = createWorkspaceStore(seed, () => ({
     ...memory,
     setItem(key, value) {
       if (fail) throw new Error("Quota");
@@ -715,7 +715,7 @@ test("discussion preserves authors and drafts on failed writes, survives task un
 
 test("subtasks can be renamed and removed without changing parent status", () => {
   const memory = memoryStorage();
-  const store = createTaskStore(seed, () => memory);
+  const store = createWorkspaceStore(seed, () => memory);
   store.load();
   store.addSubtask(9, "Draft");
   assert.equal(store.renameSubtask(9, 1, "Final").ok, true);
@@ -724,4 +724,95 @@ test("subtasks can be renamed and removed without changing parent status", () =>
   assert.equal(store.getSnapshot().tasks[0].status, "todo");
   assert.equal(store.getSnapshot().tasks[0].subtasks.length, 0);
   assert.equal(store.renameSubtask(9, 1, "Stale").ok, false);
+});
+
+test("backups round-trip full data, reject broken references and recover corrupt storage only through explicit replacement", () => {
+  const memory = memoryStorage();
+  const store = createWorkspaceStore(seed, () => memory);
+  store.load();
+  store.addComment(9, "Keep this update");
+  const backup = store.exportWorkspace();
+  assert.equal(backup.ok, true);
+  if (!backup.ok) return;
+  const before = store.getSnapshot().tasks;
+  const broken = JSON.parse(backup.data);
+  broken.tasks[0].epic = "Unknown";
+  assert.equal(store.importWorkspace(JSON.stringify(broken)).ok, false);
+  assert.deepEqual(store.getSnapshot().tasks, before);
+  memory.setItem(WORKSPACE_STORAGE_KEY, "broken");
+  store.load();
+  assert.equal(store.exportWorkspace().ok, false);
+  assert.equal(store.importWorkspace(backup.data).ok, true);
+  assert.equal(store.getSnapshot().error, null);
+  assert.deepEqual(store.getSnapshot().tasks, before);
+  assert.equal(store.clearWorkspace().ok, true);
+  assert.deepEqual(store.getSnapshot().tasks, []);
+  store.load();
+  assert.deepEqual(store.getSnapshot().tasks, []);
+});
+
+test("failed backup replacement and clear retain the current workspace", () => {
+  const memory = memoryStorage();
+  let fail = false;
+  const store = createWorkspaceStore(seed, () => ({
+    ...memory,
+    setItem(key, value) {
+      if (fail) throw new Error("Quota");
+      memory.setItem(key, value);
+    },
+  }));
+  store.load();
+  store.createTask(input);
+  const backup = store.exportWorkspace();
+  if (!backup.ok) throw new Error("Export failed");
+  const before = store.getSnapshot();
+  fail = true;
+  assert.equal(store.clearWorkspace().ok, false);
+  assert.equal(store.importWorkspace(backup.data).ok, false);
+  assert.deepEqual(store.getSnapshot().tasks, before.tasks);
+});
+
+test("replacing or clearing a workspace changes its identity while ordinary edits and reload keep it", () => {
+  const storage = memoryStorage();
+  const store = createWorkspaceStore(seed, () => storage);
+  store.load();
+  const backup = store.exportWorkspace();
+  if (!backup.ok) throw new Error("Export failed");
+  store.importWorkspace(backup.data);
+  const first = store.getSnapshot().workspaceId;
+  assert.equal(typeof first, "string");
+  store.updateTask(9, input);
+  store.load();
+  assert.equal(store.getSnapshot().workspaceId, first);
+  store.importWorkspace(backup.data);
+  assert.notEqual(store.getSnapshot().workspaceId, first);
+  const restored = store.getSnapshot().workspaceId;
+  store.clearWorkspace();
+  assert.notEqual(store.getSnapshot().workspaceId, restored);
+});
+
+test("backup migration validates derived catalogs before accepting replacement", () => {
+  const storage = memoryStorage();
+  const store = createWorkspaceStore(seed, () => storage);
+  store.load();
+  const duplicateMembers = {
+    version: 1,
+    tasks: [
+      { ...seed[0], assignee: "Maya" },
+      { ...seed[0], id: 10, assignee: "maya" },
+    ],
+  };
+  assert.equal(
+    store.importWorkspace(JSON.stringify(duplicateMembers)).ok,
+    false,
+  );
+  const duplicateEpics = {
+    version: 1,
+    tasks: [
+      { ...seed[0], epic: "Goal" },
+      { ...seed[0], id: 10, epic: "goal" },
+    ],
+  };
+  assert.equal(store.importWorkspace(JSON.stringify(duplicateEpics)).ok, false);
+  assert.deepEqual(store.getSnapshot().tasks, seed);
 });

@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
-import { ProjectBreadcrumb } from "@/features/settings/components/project-identity";
+import { PageHeading } from "@/shared/ui/page-heading";
 import { WorkspaceSettings } from "@/features/settings/components/workspace-settings";
-export const metadata: Metadata = { title: "Settings | Orbit" };
-export default function SettingsPage() {
+export const metadata: Metadata = { title: "Workspace settings | Orbit" };
+export default function Page() {
   return (
     <div className="max-w-4xl">
-      <ProjectBreadcrumb />
-      <h1 className="text-3xl font-semibold tracking-tight">
-        Workspace settings
-      </h1>
-      <p className="mt-2 mb-8 text-xs leading-6 text-base-content/65">
-        Make your project feel like your team’s space.
-      </p>
+      <PageHeading
+        title="Workspace settings"
+        description="Make Orbit your own. Manage your project, local team names and backups."
+      />
       <WorkspaceSettings />
     </div>
   );

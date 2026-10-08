@@ -41,22 +41,24 @@ export function SprintPlanner() {
           </button>
         </div>
       )}
-      <div className="mb-6 rounded-3xl border border-secondary/60 bg-secondary/20 p-6 sm:p-8">
-        <p className="text-[10px] font-semibold tracking-widest uppercase">
-          A focused next step
-        </p>
-        <h2 className="mt-3 text-2xl font-semibold">
-          Give your next release a clear goal.
-        </h2>
-        <p className="mt-3 max-w-xl text-xs leading-6 text-base-content/75">
-          Plan work from your backlog, run one sprint at a time, and carry
-          unfinished tasks forward.
-        </p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-secondary/50 bg-secondary/15 p-5">
+        <div>
+          <p className="text-sm font-semibold">
+            {sprints.find((sprint) => sprint.status === "active")?.name ??
+              "Ready for your next sprint"}
+          </p>
+          <p className="mt-2 text-xs leading-6 text-base-content/65">
+            {sprints.filter((sprint) => sprint.status === "planned").length}{" "}
+            planned ·{" "}
+            {sprints.filter((sprint) => sprint.status === "completed").length}{" "}
+            completed · One active sprint at a time
+          </p>
+        </div>
         <Link
           href="/backlog"
-          className="btn btn-primary mt-5 rounded-xl text-xs"
+          className="btn btn-outline btn-sm rounded-xl text-xs"
         >
-          Open backlog
+          Plan from Backlog <span aria-hidden="true">↗</span>
         </Link>
       </div>
       <p role="status" className="mb-4 text-xs text-teal-800">

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Task, TaskPlacement } from "@/features/tasks/types/task";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 export function TaskPlacementAction({
   task,
   onMove,

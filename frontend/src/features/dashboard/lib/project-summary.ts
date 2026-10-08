@@ -1,5 +1,5 @@
 import type { Task } from "@/features/tasks/types/task";
-import type { DailySummary } from "@/features/tasks/store/workspace-history";
+import type { DailySummary } from "@/features/dashboard/lib/workspace-history";
 import { taskColumns } from "@/features/tasks/constants/task-statuses";
 export function summarizeProject(tasks: Task[], epics: string[]) {
   const active = tasks.filter((task) => !task.archived);

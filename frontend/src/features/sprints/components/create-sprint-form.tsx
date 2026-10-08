@@ -5,7 +5,7 @@ import {
   createSprintSchema,
   type CreateSprintInput,
 } from "../schemas/sprint-schema";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 
 export function CreateSprintForm({
   disabled,

@@ -79,9 +79,36 @@ export function TaskWorkspace({
           {actionError}
         </p>
       )}
-      <p role="status" className="mb-3 text-xs text-teal-800">
-        {notice}
-      </p>
+      {notice && (
+        <p role="status" className="mb-3 text-xs text-teal-800">
+          {notice}
+        </p>
+      )}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <p role="status" className="text-xs text-base-content/65">
+          {filteredTasks.length} of {eligibleTasks.length} tasks
+        </p>
+        <div className="ml-auto">
+          {mode !== "archive" && (
+            <CreateTaskDialog
+              epics={epics}
+              assignees={assignees}
+              disabled={!ready || Boolean(error)}
+              onCreate={(input) => {
+                const result = createTask(
+                  input,
+                  mode === "backlog" ? "backlog" : "board",
+                );
+                if (result.ok) {
+                  setFilters(defaultTaskFilters);
+                  setNotice("Task created and saved in this browser.");
+                }
+                return result;
+              }}
+            />
+          )}
+        </div>
+      </div>
       <TaskFilterToolbar
         filters={filters}
         onChange={setFilters}
@@ -90,32 +117,6 @@ export function TaskWorkspace({
         labels={[...new Set(tasks.flatMap((task) => task.labels))].sort()}
         sprints={sprints}
       />
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <p
-          role="status"
-          className="pb-2 text-xs text-base-content/60 sm:ml-auto"
-        >
-          {filteredTasks.length} of {eligibleTasks.length} tasks
-        </p>
-        {mode !== "archive" && (
-          <CreateTaskDialog
-            epics={epics}
-            assignees={assignees}
-            disabled={!ready || Boolean(error)}
-            onCreate={(input) => {
-              const result = createTask(
-                input,
-                mode === "backlog" ? "backlog" : "board",
-              );
-              if (result.ok) {
-                setFilters(defaultTaskFilters);
-                setNotice("Task created and saved in this browser.");
-              }
-              return result;
-            }}
-          />
-        )}
-      </div>
       {mode === "board" ? (
         <KanbanBoard
           tasks={filteredTasks}
@@ -151,9 +152,6 @@ export function TaskWorkspace({
           }}
         />
       )}
-      <p className="mt-2 text-[11px] text-base-content/60">
-        Saved in this browser · Starts with sample tasks.
-      </p>
     </div>
   );
 }

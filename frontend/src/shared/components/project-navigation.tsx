@@ -4,10 +4,10 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/my-work", label: "My Work", icon: "my-work" },
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
+  { href: "/tasks", label: "Board", icon: "board" },
   { href: "/backlog", label: "Backlog", icon: "backlog" },
   { href: "/epics", label: "Epics", icon: "epics" },
   { href: "/sprints", label: "Sprints", icon: "sprints" },
-  { href: "/tasks", label: "Board", icon: "board" },
   { href: "/tasks/archive", label: "Archive", icon: "archive" },
   { href: "/settings", label: "Settings", icon: "settings" },
 ];
@@ -20,13 +20,17 @@ export function ProjectNavigation() {
           <li key={link.href}>
             <Link
               href={link.href}
+              onClick={(event) => {
+                const details = event.currentTarget.closest("details");
+                if (details) details.open = false;
+              }}
               aria-current={
                 pathname === link.href ||
                 (link.href === "/epics" && pathname.startsWith("/epics/"))
                   ? "page"
                   : undefined
               }
-              className={`${pathname === link.href || (link.href === "/epics" && pathname.startsWith("/epics/")) ? "nav-active" : ""} gap-3 rounded-md px-3 py-3 text-sm font-medium`}
+              className={`${pathname === link.href || (link.href === "/epics" && pathname.startsWith("/epics/")) ? "nav-active" : ""} gap-3 rounded-xl px-3 py-3 text-sm font-medium`}
             >
               <NavigationIcon kind={link.icon} />
               {link.label}

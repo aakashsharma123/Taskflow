@@ -118,20 +118,24 @@ export function TaskDiscussion({ task }: { task: Task }) {
               </div>
               {editing === comment.id ? (
                 <div className="mt-4">
-                  <label className="text-xs font-medium">
+                  <label
+                    htmlFor={`${id}-${comment.id}`}
+                    className="text-xs font-medium"
+                  >
                     Edit comment
-                    <textarea
-                      className="textarea mt-2 w-full rounded-xl"
-                      rows={3}
-                      value={draft}
-                      onChange={(event) => {
-                        setDraft(event.target.value);
-                        setError("");
-                      }}
-                      maxLength={2000}
-                      autoFocus
-                    />
                   </label>
+                  <textarea
+                    id={`${id}-${comment.id}`}
+                    className="textarea mt-2 w-full rounded-xl"
+                    rows={3}
+                    value={draft}
+                    onChange={(event) => {
+                      setDraft(event.target.value);
+                      setError("");
+                    }}
+                    maxLength={2000}
+                    autoFocus
+                  />
                   <div className="mt-3 flex gap-2">
                     <button
                       type="button"
@@ -141,6 +145,7 @@ export function TaskDiscussion({ task }: { task: Task }) {
                         setError(result.ok ? "" : result.error);
                         if (result.ok) {
                           setEditing(null);
+                          textarea.current?.focus();
                           setNotice("Comment updated.");
                         }
                       }}
@@ -152,6 +157,7 @@ export function TaskDiscussion({ task }: { task: Task }) {
                       className="btn btn-ghost btn-sm"
                       onClick={() => {
                         setEditing(null);
+                        textarea.current?.focus();
                         setError("");
                       }}
                     >

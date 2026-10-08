@@ -2,7 +2,7 @@
 import { useId, useState, type FormEvent } from "react";
 import type { Sprint } from "../types/sprint";
 import type { Task } from "@/features/tasks/types/task";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 import { formatTaskDate } from "@/features/tasks/lib/task-dates";
 import { sprintProgress } from "../lib/sprint-progress";
 

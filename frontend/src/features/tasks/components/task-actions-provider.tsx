@@ -16,6 +16,8 @@ const TaskActionsContext = createContext<{
 
 export function TaskActionsProvider({ children }: { children: ReactNode }) {
   const workspace = useWorkspace();
+  const [workspaceId, setWorkspaceId] = useState(workspace.workspaceId);
+  const currentWorkspace = workspaceId === workspace.workspaceId;
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [notice, setNotice] = useState("");
@@ -26,6 +28,12 @@ export function TaskActionsProvider({ children }: { children: ReactNode }) {
   } | null>(null);
   const origin = useRef<HTMLElement | null>(null);
   const openTask = (id: number) => {
+    if (!currentWorkspace) {
+      setNotice("");
+      setError("");
+      setUndo(null);
+    }
+    setWorkspaceId(workspace.workspaceId);
     origin.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -38,7 +46,7 @@ export function TaskActionsProvider({ children }: { children: ReactNode }) {
       {children}
       <TaskDetailsDialog
         task={workspace.tasks.find((task) => task.id === selectedId)}
-        open={open}
+        open={currentWorkspace && open}
         onOpenChange={setOpen}
         finalFocusEl={() =>
           origin.current?.isConnected
@@ -48,20 +56,35 @@ export function TaskActionsProvider({ children }: { children: ReactNode }) {
         epics={workspace.epics}
         assignees={workspace.settings.members}
         sprints={workspace.sprints}
-        onAssignSprint={workspace.assignSprint}
+        onAssignSprint={(id, sprintId) => {
+          const result = workspace.assignSprint(id, sprintId);
+          if (result.ok) {
+            setUndo(null);
+            setError("");
+            setNotice(`ORB-${id} sprint assignment updated.`);
+          }
+          return result;
+        }}
         onAddSubtask={workspace.addSubtask}
         onToggleSubtask={workspace.setSubtaskCompleted}
         onUpdate={(id, input) => {
           const result = workspace.updateTask(id, input);
-          if (result.ok) setNotice(`ORB-${id} updated.`);
+          if (result.ok) {
+            setUndo(null);
+            setError("");
+            setNotice(`ORB-${id} updated.`);
+          }
           return result;
         }}
         onPlacement={(id, placement) => {
           const result = workspace.setPlacement(id, placement);
-          if (result.ok)
+          if (result.ok) {
+            setUndo(null);
+            setError("");
             setNotice(
               `ORB-${id} moved to ${placement === "board" ? "Board" : "Backlog"}.`,
             );
+          }
           return result;
         }}
         onLifecycle={(id, action) => {
@@ -79,7 +102,7 @@ export function TaskActionsProvider({ children }: { children: ReactNode }) {
           return result;
         }}
       />
-      {(notice || error) && (
+      {currentWorkspace && (notice || error) && (
         <div className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-md rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xl sm:left-auto sm:right-6">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">

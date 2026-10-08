@@ -2,10 +2,12 @@
 import Link from "next/link";
 import { useWorkspace } from "@/features/workspace/components/workspace-provider";
 import { summarizeProject } from "@/features/dashboard/lib/project-summary";
+import { SprintOutcomes } from "./sprint-outcomes";
 import { CompletionTrend } from "./completion-trend";
 import { EpicProgress } from "./epic-progress";
 export function ProjectDashboard() {
-  const { tasks, epics, history, ready, error, reload } = useWorkspace();
+  const { tasks, epics, history, sprints, ready, error, reload } =
+    useWorkspace();
   if (!ready)
     return (
       <p
@@ -66,7 +68,7 @@ export function ProjectDashboard() {
             Project pulse
           </p>
           <h2 id="project-pulse" className="text-xl font-semibold">
-            A clear view of your next move.
+            Momentum at a glance.
           </h2>
           <p className="mt-3 text-xs leading-6 text-base-content/70">
             {summary.highPriorityOpen} high-priority tasks still open ·{" "}
@@ -152,6 +154,7 @@ export function ProjectDashboard() {
         </section>
         <CompletionTrend history={history} tasks={tasks} today={today} />
       </div>
+      <SprintOutcomes sprints={sprints} />
       <EpicProgress epics={summary.epics} />
       <p className="text-[11px] text-base-content/60">
         Overview uses tasks saved in this browser.

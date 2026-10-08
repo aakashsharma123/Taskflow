@@ -7,7 +7,7 @@ import { OrbitMark } from "@/shared/ui/orbit-mark";
 import { DialogPanel } from "@/shared/ui/dialog-panel";
 import { createEpicSchema } from "@/features/epics/schemas/create-epic-schema";
 import type { Task } from "@/features/tasks/types/task";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 
 type EpicsDialogProps = {
   triggerLabel?: string;

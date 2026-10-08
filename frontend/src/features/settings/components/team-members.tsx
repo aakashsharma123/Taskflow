@@ -1,7 +1,7 @@
 "use client";
 import { useId, useRef, useState, type FormEvent } from "react";
 import { memberNameSchema } from "../schemas/workspace-settings-schema";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 import type { Task } from "@/features/tasks/types/task";
 export function TeamMembers({
   members,

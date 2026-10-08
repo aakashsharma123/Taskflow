@@ -1,5 +1,5 @@
 import type { Task } from "@/features/tasks/types/task";
-import type { DailySummary } from "@/features/tasks/store/workspace-history";
+import type { DailySummary } from "@/features/dashboard/lib/workspace-history";
 import { completionTrend } from "@/features/dashboard/lib/project-summary";
 export function CompletionTrend({
   history,

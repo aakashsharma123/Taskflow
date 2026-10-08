@@ -10,8 +10,8 @@ import {
   taskDueDateSchema,
 } from "@/features/tasks/schemas/task-metadata-schema";
 import { subtaskTitleSchema } from "@/features/tasks/schemas/subtask-schema";
-import { taskActivitySchema } from "@/features/tasks/store/task-activity";
-import { workspaceHistorySchema } from "@/features/tasks/store/workspace-history";
+import { taskActivitySchema } from "@/features/tasks/lib/task-activity";
+import { workspaceHistorySchema } from "@/features/dashboard/lib/workspace-history";
 import { sprintsSchema } from "@/features/sprints/schemas/sprint-schema";
 import { workspaceSettingsSchema } from "@/features/settings/schemas/workspace-settings-schema";
 
@@ -43,6 +43,7 @@ const savedTaskSchema: z.ZodType<Task> = z.object({
 });
 export const workspaceSchema = z.object({
   version: z.literal(1),
+  workspaceId: z.uuid().nullable().default(null),
   sprints: sprintsSchema,
   settings: workspaceSettingsSchema.optional(),
   history: workspaceHistorySchema.default([]),

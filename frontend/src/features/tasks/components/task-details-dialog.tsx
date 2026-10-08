@@ -14,7 +14,7 @@ import { TaskLifecycleActions } from "./task-lifecycle-actions";
 import { TaskForm } from "@/features/tasks/components/task-form";
 import type { Task, TaskPlacement } from "@/features/tasks/types/task";
 import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schema";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 
 type TaskDetailsDialogProps = {
   task: Task | undefined;
@@ -69,6 +69,22 @@ export function TaskDetailsDialog({
         title={task ? `Task details · ORB-${task.id}` : "Task details"}
         description="Review the details and keep your team’s next steps clear."
       >
+        {!task && (
+          <div role="alert" className="p-7 text-sm leading-7">
+            <p>
+              This task is no longer available. It may have been removed in
+              another tab.
+            </p>
+            <Dialog.CloseTrigger asChild>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm mt-4 rounded-xl"
+              >
+                Close task
+              </button>
+            </Dialog.CloseTrigger>
+          </div>
+        )}
         {task && (
           <Tabs.Root
             defaultValue="details"
@@ -77,17 +93,19 @@ export function TaskDetailsDialog({
           >
             <Tabs.List
               aria-label="Task sections"
-              className="flex shrink-0 gap-1 overflow-x-auto border-b border-base-300/70 px-3 sm:px-6"
+              className="grid shrink-0 grid-cols-5 border-b border-base-300/70 px-2 sm:px-6"
             >
               {[
                 { value: "details", label: "Details" },
                 {
                   value: "subtasks",
-                  label: `Subtasks (${task.subtasks.length})`,
+                  label: "Subtasks",
+                  count: task.subtasks.length,
                 },
                 {
                   value: "discussion",
-                  label: `Discussion (${task.comments.length})`,
+                  label: "Comments",
+                  count: task.comments.length,
                 },
                 { value: "activity", label: "Activity" },
                 { value: "manage", label: "Manage" },
@@ -96,9 +114,14 @@ export function TaskDetailsDialog({
                   key={tab.value}
                   value={tab.value}
                   type="button"
-                  className="shrink-0 border-b-2 border-transparent px-3 py-4 text-[11px] font-medium text-base-content/65 data-[selected]:border-primary data-[selected]:text-primary"
+                  className="flex min-w-0 items-center justify-center gap-1 border-b-2 border-transparent px-1 py-4 text-[10px] font-medium text-base-content/65 data-[selected]:border-primary data-[selected]:text-primary sm:px-3 sm:text-xs"
                 >
                   {tab.label}
+                  {"count" in tab && (
+                    <span className="sr-only sm:not-sr-only">
+                      ({tab.count})
+                    </span>
+                  )}
                 </Tabs.Trigger>
               ))}
             </Tabs.List>

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useWorkspace } from "@/features/workspace/components/workspace-provider";
 import { WorkspaceState } from "@/features/workspace/components/workspace-state";
 import { useTaskActions } from "@/features/tasks/components/task-actions-provider";
@@ -15,6 +15,8 @@ export function EpicDetail({ name }: { name: string }) {
   const workspace = useWorkspace();
   const { openTask } = useTaskActions();
   const router = useRouter();
+  const id = useId();
+  const [invalid, setInvalid] = useState(false);
   const [error, setError] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -35,10 +37,12 @@ export function EpicDetail({ name }: { name: string }) {
       workspace.epics.filter((epic) => epic !== name),
     ).safeParse(new FormData(form).get("epicName"));
     if (!validated.success) {
+      setInvalid(true);
       setError(validated.error.issues[0].message);
       form.querySelector<HTMLInputElement>("input")?.focus();
       return;
     }
+    setInvalid(false);
     const result = workspace.renameEpic(name, validated.data);
     setError(result.ok ? "" : result.error);
     if (result.ok)
@@ -80,7 +84,8 @@ export function EpicDetail({ name }: { name: string }) {
                   {name}
                 </h1>
                 <p className="mt-3 text-xs text-base-content/65">
-                  {items.length} linked tasks · {completed} completed ·{" "}
+                  {items.length} linked {items.length === 1 ? "task" : "tasks"}{" "}
+                  · {completed} completed ·{" "}
                   {items.filter((task) => task.archived).length} archived
                 </p>
               </div>
@@ -106,7 +111,7 @@ export function EpicDetail({ name }: { name: string }) {
                     onChange={(e) => setFilter(e.target.value)}
                     aria-label="Epic task filter"
                   >
-                    <option value="all">All active</option>
+                    <option value="all">Unarchived</option>
                     {taskColumns.map((column) => (
                       <option key={column.status} value={column.status}>
                         {column.label}
@@ -162,10 +167,15 @@ export function EpicDetail({ name }: { name: string }) {
                   Epic name
                   <input
                     name="epicName"
+                    aria-invalid={invalid}
+                    aria-describedby={invalid ? `${id}-error` : undefined}
                     className="input mt-2 w-full rounded-xl"
                     defaultValue={name}
                     maxLength={60}
-                    onChange={() => setError("")}
+                    onChange={() => {
+                      setError("");
+                      setInvalid(false);
+                    }}
                   />
                 </label>
                 <button

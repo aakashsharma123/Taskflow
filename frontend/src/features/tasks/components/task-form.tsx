@@ -15,7 +15,7 @@ import {
   type CreateTaskInput,
 } from "@/features/tasks/schemas/create-task-schema";
 import { TaskLabel } from "./task-metadata";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 
 type TaskFormProps = {
   epics: string[];

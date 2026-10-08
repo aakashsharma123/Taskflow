@@ -7,7 +7,7 @@ import {
 } from "../schemas/workspace-settings-schema";
 import { workspaceAppearances } from "../constants/workspace-appearances";
 import type { WorkspaceSettings } from "../types/workspace-settings";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 
 export function ProjectSettingsForm({
   settings,

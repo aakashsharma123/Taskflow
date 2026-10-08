@@ -10,21 +10,22 @@ import {
   type ReactNode,
 } from "react";
 import {
-  createTaskStore,
-  TASK_STORAGE_KEY,
-} from "@/features/tasks/store/task-store";
+  createWorkspaceStore,
+  WORKSPACE_STORAGE_KEY,
+} from "@/features/workspace/store/workspace-store";
 import { sampleTasks } from "@/features/tasks/data/sample-tasks";
 import { workspaceAppearances } from "@/features/settings/constants/workspace-appearances";
 
 function useWorkspaceStore() {
   const [store] = useState(() =>
-    createTaskStore(sampleTasks, () => window.localStorage),
+    createWorkspaceStore(sampleTasks, () => window.localStorage),
   );
   const subscribe = useCallback(
     (listener: () => void) => {
       const unsubscribe = store.subscribe(listener);
       const onStorage = (event: StorageEvent) => {
-        if (event.key === TASK_STORAGE_KEY || event.key === null) store.load();
+        if (event.key === WORKSPACE_STORAGE_KEY || event.key === null)
+          store.load();
       };
       window.addEventListener("storage", onStorage);
       window.addEventListener("focus", store.load);
@@ -44,6 +45,9 @@ function useWorkspaceStore() {
   );
   return {
     ...snapshot,
+    exportWorkspace: store.exportWorkspace,
+    importWorkspace: store.importWorkspace,
+    clearWorkspace: store.clearWorkspace,
     selectMember: store.selectMember,
     updateSettings: store.updateSettings,
     addMember: store.addMember,

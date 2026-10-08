@@ -4,7 +4,7 @@ import { useWorkspace } from "@/features/workspace/components/workspace-provider
 import { useId, useRef, useState } from "react";
 import { subtaskTitleSchema } from "@/features/tasks/schemas/subtask-schema";
 import type { Task } from "@/features/tasks/types/task";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 
 type SubtaskListProps = {
   task: Task;

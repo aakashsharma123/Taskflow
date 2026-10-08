@@ -1,7 +1,7 @@
 "use client";
 import { useId, useState } from "react";
 import type { Task } from "@/features/tasks/types/task";
-import type { SaveResult } from "@/features/tasks/store/task-store";
+import type { SaveResult } from "@/features/workspace/store/workspace-store";
 import type { Sprint } from "../types/sprint";
 export function TaskSprintAction({
   task,
