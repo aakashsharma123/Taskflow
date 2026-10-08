@@ -13,6 +13,9 @@ const priorityStyles = {
 };
 
 export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
+  const completedSubtasks = task.subtasks.filter(
+    (subtask) => subtask.completed,
+  ).length;
   const initials = task.assignee
     ?.split(" ")
     .map((part) => part[0])
@@ -83,6 +86,19 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
           </span>
         )}
       </div>
+      {task.subtasks.length > 0 && (
+        <div className="mb-4 flex items-center gap-3">
+          <progress
+            aria-label={`ORB-${task.id} completed subtasks`}
+            className="progress progress-primary h-1 min-w-0 flex-1"
+            value={completedSubtasks}
+            max={task.subtasks.length}
+          />
+          <span className="shrink-0 text-[10px] font-medium text-base-content/75">
+            {completedSubtasks}/{task.subtasks.length} subtasks
+          </span>
+        </div>
+      )}
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-base-300/60 pt-3">
         <span
           className="flex min-w-0 items-center gap-2"

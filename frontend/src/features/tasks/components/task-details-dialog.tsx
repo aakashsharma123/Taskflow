@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { Dialog } from "@ark-ui/react/dialog";
 import { DialogPanel } from "@/shared/ui/dialog-panel";
+import { SubtaskList } from "@/features/tasks/components/subtask-list";
 import { TaskForm } from "@/features/tasks/components/task-form";
 import type { Task } from "@/features/tasks/types/task";
 import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schema";
@@ -16,6 +17,12 @@ type TaskDetailsDialogProps = {
   epics: string[];
   assignees: string[];
   onUpdate: (id: number, input: CreateTaskInput) => SaveResult;
+  onAddSubtask: (id: number, title: string) => SaveResult;
+  onToggleSubtask: (
+    taskId: number,
+    subtaskId: number,
+    completed: boolean,
+  ) => SaveResult;
 };
 
 export function TaskDetailsDialog({
@@ -26,6 +33,8 @@ export function TaskDetailsDialog({
   epics,
   assignees,
   onUpdate,
+  onAddSubtask,
+  onToggleSubtask,
 }: TaskDetailsDialogProps) {
   const titleRef = useRef<HTMLInputElement>(null);
   return (
@@ -55,7 +64,13 @@ export function TaskDetailsDialog({
               if (result.ok) onOpenChange(false);
               return result;
             }}
-          />
+          >
+            <SubtaskList
+              task={task}
+              onAdd={onAddSubtask}
+              onToggle={onToggleSubtask}
+            />
+          </TaskForm>
         )}
       </DialogPanel>
     </Dialog.Root>

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
+import { EpicsDialog } from "@/features/epics/components/epics-dialog";
 import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog";
 import { TaskDetailsDialog } from "@/features/tasks/components/task-details-dialog";
 import { TaskCard } from "@/features/tasks/components/task-card";
@@ -15,8 +16,18 @@ const columns = [
 ] satisfies { status: TaskStatus; label: string; dot: string }[];
 
 export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
-  const { tasks, ready, error, createTask, updateTask, reload } =
-    useTaskStore(initialTasks);
+  const {
+    tasks,
+    epics,
+    ready,
+    error,
+    createTask,
+    updateTask,
+    createEpic,
+    addSubtask,
+    setSubtaskCompleted,
+    reload,
+  } = useTaskStore(initialTasks);
   const boardRef = useRef<HTMLDivElement>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -24,11 +35,12 @@ export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
   const [notice, setNotice] = useState("");
   const [search, setSearch] = useState("");
   const [epic, setEpic] = useState("");
-  const epics = [
-    ...new Set(tasks.flatMap((task) => (task.epic ? [task.epic] : []))),
-  ];
   const assignees = [
-    ...new Set(tasks.flatMap((task) => (task.assignee ? [task.assignee] : []))),
+    ...new Set(
+      [...initialTasks, ...tasks].flatMap((task) =>
+        task.assignee ? [task.assignee] : [],
+      ),
+    ),
   ];
   const query = search.trim().toLowerCase();
   const filteredTasks = tasks.filter(
@@ -111,6 +123,12 @@ export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
         >
           {filteredTasks.length} of {tasks.length} tasks
         </p>
+        <EpicsDialog
+          epics={epics}
+          tasks={tasks}
+          disabled={!ready || Boolean(error)}
+          onCreate={createEpic}
+        />
         <CreateTaskDialog
           epics={epics}
           assignees={assignees}
@@ -204,6 +222,8 @@ export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
           boardRef.current?.querySelector<HTMLElement>('[role="region"]') ??
           null
         }
+        onAddSubtask={addSubtask}
+        onToggleSubtask={setSubtaskCompleted}
         onUpdate={(id, input) => {
           const result = updateTask(id, input);
           if (result.ok) setNotice("Task updated and saved in this browser.");

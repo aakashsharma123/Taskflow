@@ -5,13 +5,15 @@ type TaskOptions = {
   assignees: readonly string[];
 };
 
+export const taskTitleSchema = z
+  .string({ error: "Enter a task title." })
+  .trim()
+  .min(1, { error: "Enter a task title." })
+  .max(120, { error: "Keep the title to 120 characters or fewer." });
+
 export function createTaskSchema({ epics, assignees }: TaskOptions) {
   return z.object({
-    title: z
-      .string({ error: "Enter a task title." })
-      .trim()
-      .min(1, { error: "Enter a task title." })
-      .max(120, { error: "Keep the title to 120 characters or fewer." }),
+    title: taskTitleSchema,
     status: z.enum(["todo", "in_progress", "in_review", "done"], {
       error: "Choose a valid status.",
     }),
