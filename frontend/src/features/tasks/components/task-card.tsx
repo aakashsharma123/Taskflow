@@ -12,7 +12,7 @@ const priorityStyles = {
   low: "bg-slate-100 text-slate-700",
 };
 
-export function TaskCard({ task }: { task: Task }) {
+export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
   const initials = task.assignee
     ?.split(" ")
     .map((part) => part[0])
@@ -47,7 +47,16 @@ export function TaskCard({ task }: { task: Task }) {
         )}
       </div>
       <h3 className="min-h-12 text-[13px] leading-6 font-semibold tracking-[-0.01em] [overflow-wrap:anywhere]">
-        {task.title}
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          data-task-id={task.id}
+          aria-label={`Open ORB-${task.id}: ${task.title}`}
+          onClick={onOpen}
+          className="w-full cursor-pointer rounded-sm text-left hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-4"
+        >
+          {task.title}
+        </button>
       </h3>
       <div className="mt-4 mb-5 min-h-7">
         {task.epic && (

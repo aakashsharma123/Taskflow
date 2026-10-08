@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
 import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog";
+import { TaskDetailsDialog } from "@/features/tasks/components/task-details-dialog";
 import { TaskCard } from "@/features/tasks/components/task-card";
 import type { Task, TaskStatus } from "@/features/tasks/types/task";
 
@@ -14,8 +15,12 @@ const columns = [
 ] satisfies { status: TaskStatus; label: string; dot: string }[];
 
 export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
-  const { tasks, ready, error, createTask, reload } =
+  const { tasks, ready, error, createTask, updateTask, reload } =
     useTaskStore(initialTasks);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const selectedTask = tasks.find((task) => task.id === selectedTaskId);
   const [notice, setNotice] = useState("");
   const [search, setSearch] = useState("");
   const [epic, setEpic] = useState("");
@@ -35,7 +40,7 @@ export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
   );
 
   return (
-    <>
+    <div ref={boardRef}>
       {error && (
         <div
           role="alert"
@@ -163,7 +168,13 @@ export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
                   >
                     {items.map((task) => (
                       <li key={task.id}>
-                        <TaskCard task={task} />
+                        <TaskCard
+                          task={task}
+                          onOpen={() => {
+                            setSelectedTaskId(task.id);
+                            setDetailsOpen(true);
+                          }}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -180,6 +191,25 @@ export function TaskBoard({ tasks: initialTasks }: { tasks: Task[] }) {
       <p className="mt-2 text-[11px] text-base-content/60">
         Saved in this browser · Starts with sample tasks.
       </p>
-    </>
+      <TaskDetailsDialog
+        task={selectedTask}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        epics={epics}
+        assignees={assignees}
+        finalFocusEl={() =>
+          boardRef.current?.querySelector<HTMLButtonElement>(
+            `[data-task-id="${selectedTaskId}"]`,
+          ) ??
+          boardRef.current?.querySelector<HTMLElement>('[role="region"]') ??
+          null
+        }
+        onUpdate={(id, input) => {
+          const result = updateTask(id, input);
+          if (result.ok) setNotice("Task updated and saved in this browser.");
+          return result;
+        }}
+      />
+    </div>
   );
 }

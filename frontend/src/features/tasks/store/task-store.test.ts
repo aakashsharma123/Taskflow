@@ -86,3 +86,29 @@ test("fresh reads include another tab's changes", () => {
     [11, 10, 9],
   );
 });
+
+test("updates a task without changing its ID or unrelated tasks", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  store.createTask(input);
+  assert.equal(
+    store.updateTask(9, { ...input, title: "Updated seed", status: "done" }).ok,
+    true,
+  );
+  assert.equal(
+    store.getSnapshot().tasks.find((task) => task.id === 9)?.status,
+    "done",
+  );
+  assert.equal(
+    store.getSnapshot().tasks.find((task) => task.id === 10)?.title,
+    "New task",
+  );
+  assert.equal(store.updateTask(999, input).ok, false);
+  const restored = createTaskStore(seed, () => storage);
+  restored.load();
+  assert.equal(
+    restored.getSnapshot().tasks.find((task) => task.id === 9)?.title,
+    "Updated seed",
+  );
+});
