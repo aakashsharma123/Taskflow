@@ -1,5 +1,6 @@
 "use client";
 
+import { TaskActivityFeed } from "./task-activity-feed";
 import { useRef } from "react";
 import { Dialog } from "@ark-ui/react/dialog";
 import { DialogPanel } from "@/shared/ui/dialog-panel";
@@ -97,6 +98,7 @@ export function TaskDetailsDialog({
               onAdd={onAddSubtask}
               onToggle={onToggleSubtask}
             />
+            <TaskActivityFeed task={task} />
           </TaskForm>
         )}
       </DialogPanel>
