@@ -10,7 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "tsx --test src/features/tasks/schemas/*.test.ts src/features/tasks/store/*.test.ts src/features/epics/schemas/*.test.ts src/features/tasks/lib/*.test.ts src/features/dashboard/lib/*.test.ts"
+    "test": "tsx --test src/features/tasks/schemas/*.test.ts src/features/tasks/store/*.test.ts src/features/epics/schemas/*.test.ts src/features/tasks/lib/*.test.ts src/features/dashboard/lib/*.test.ts src/features/sprints/schemas/*.test.ts"
   },
   "dependencies": {
     "@ark-ui/react": "^5.39.3",

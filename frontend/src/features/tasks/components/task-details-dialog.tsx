@@ -1,5 +1,7 @@
 "use client";
 
+import { TaskSprintAction } from "@/features/sprints/components/task-sprint-action";
+import type { Sprint } from "@/features/sprints/types/sprint";
 import { TaskActivityFeed } from "./task-activity-feed";
 import { useRef } from "react";
 import { Dialog } from "@ark-ui/react/dialog";
@@ -18,6 +20,8 @@ type TaskDetailsDialogProps = {
   onOpenChange: (open: boolean) => void;
   finalFocusEl: () => HTMLElement | null;
   epics: string[];
+  sprints: Sprint[];
+  onAssignSprint: (taskId: number, sprintId: number | null) => SaveResult;
   assignees: string[];
   onPlacement: (id: number, placement: TaskPlacement) => SaveResult;
   onLifecycle: (
@@ -39,6 +43,8 @@ export function TaskDetailsDialog({
   onOpenChange,
   finalFocusEl,
   epics,
+  sprints,
+  onAssignSprint,
   assignees,
   onUpdate,
   onLifecycle,
@@ -75,6 +81,15 @@ export function TaskDetailsDialog({
               return result;
             }}
           >
+            <TaskSprintAction
+              task={task}
+              sprints={sprints}
+              onAssign={(id) => {
+                const result = onAssignSprint(task.id, id);
+                if (result.ok) onOpenChange(false);
+                return result;
+              }}
+            />
             {!task.archived && (
               <TaskPlacementAction
                 task={task}

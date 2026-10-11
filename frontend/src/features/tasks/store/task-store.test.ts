@@ -19,6 +19,7 @@ const seed: Task[] = [
     subtasks: [],
     archived: false,
     placement: "board",
+    sprintId: null,
   },
 ];
 const input: CreateTaskInput = {
@@ -470,4 +471,113 @@ test("task activity retains the newest 100 entries", () => {
   assert.equal(activity.length, 100);
   assert.equal(activity[0].id, 6);
   assert.equal(activity.at(-1)?.id, 105);
+});
+
+test("sprint lifecycle starts assigned backlog work and carries unfinished tasks while preserving summary", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  const sprint = {
+    name: "Sprint 1",
+    goal: "Ship planning",
+    startDate: "2026-10-06",
+    endDate: "2026-10-20",
+  };
+  assert.equal(store.createSprint(sprint).ok, true);
+  assert.equal(store.createSprint({ ...sprint, name: "sprint 1" }).ok, false);
+  assert.equal(store.startSprint(1).ok, false);
+  store.createTask(input, "backlog");
+  store.setPlacement(9, "backlog");
+  assert.equal(store.assignSprint(9, 1).ok, true);
+  assert.equal(store.assignSprint(10, 1).ok, true);
+  assert.equal(store.startSprint(1).ok, true);
+  assert(store.getSnapshot().tasks.every((task) => task.placement === "board"));
+  assert.equal(store.setPlacement(9, "backlog").ok, false);
+  store.createSprint({ ...sprint, name: "Sprint 2" });
+  store.createTask(input);
+  store.assignSprint(11, 2);
+  assert.equal(store.startSprint(2).ok, false);
+  store.moveTask(10, "done");
+  store.addSubtask(9, "Carry child");
+  assert.equal(store.completeSprint(1).ok, true);
+  store.load();
+  assert.deepEqual(store.getSnapshot().sprints[0].summary, {
+    total: 2,
+    completed: 1,
+    carried: 1,
+  });
+  const carried = store.getSnapshot().tasks.find((task) => task.id === 9)!;
+  assert.equal(carried.sprintId, null);
+  assert.equal(carried.placement, "backlog");
+  assert.equal(carried.status, "todo");
+  assert.equal(carried.subtasks.length, 1);
+  assert.equal(store.assignSprint(9, 1).ok, false);
+  assert.equal(store.startSprint(2).ok, true);
+  store.moveTask(10, "todo");
+  assert.equal(
+    store.getSnapshot().tasks.find((task) => task.id === 10)?.sprintId,
+    null,
+  );
+  assert.equal(store.getSnapshot().sprints[0].summary?.completed, 1);
+});
+
+test("failed sprint writes keep scope and lifecycle unchanged, and invalid references protect storage", () => {
+  const storage = memoryStorage();
+  let fail = false;
+  const store = createTaskStore(seed, () => ({
+    ...storage,
+    setItem(key, value) {
+      if (fail) throw new Error("Quota");
+      storage.setItem(key, value);
+    },
+  }));
+  store.load();
+  store.createSprint({
+    name: "Sprint",
+    goal: "",
+    startDate: "2026-10-06",
+    endDate: "2026-10-07",
+  });
+  store.assignSprint(9, 1);
+  fail = true;
+  assert.equal(store.startSprint(1).ok, false);
+  assert.equal(store.getSnapshot().sprints[0].status, "planned");
+  fail = false;
+  store.setArchived(9, true);
+  assert.equal(store.getSnapshot().tasks[0].sprintId, null);
+  assert.equal(store.assignSprint(9, 1).ok, false);
+  const raw = JSON.stringify({
+    version: 1,
+    tasks: [{ ...seed[0], sprintId: 999 }],
+  });
+  storage.setItem(TASK_STORAGE_KEY, raw);
+  store.load();
+  assert(store.getSnapshot().error);
+  assert.equal(store.createTask(input).ok, false);
+  assert.equal(storage.getItem(TASK_STORAGE_KEY), raw);
+});
+
+test("undo deletion respects a sprint started while the task was deleted", () => {
+  const storage = memoryStorage();
+  const store = createTaskStore(seed, () => storage);
+  store.load();
+  store.createSprint({
+    name: "Sprint",
+    goal: "",
+    startDate: "2026-10-06",
+    endDate: "2026-10-07",
+  });
+  store.createTask(input, "backlog");
+  store.setPlacement(9, "backlog");
+  store.assignSprint(9, 1);
+  store.assignSprint(10, 1);
+  store.deleteTask(9);
+  store.startSprint(1);
+  assert.equal(store.restoreDeletedTask(9).ok, true);
+  store.load();
+  assert.equal(store.getSnapshot().error, null);
+  assert.equal(
+    store.getSnapshot().tasks.find((task) => task.id === 9)?.placement,
+    "board",
+  );
 });

@@ -34,6 +34,12 @@ export function recordTaskActivity(
   else if (removed && !wasRemoved) messages.push("Task deleted");
   else if (!removed && wasRemoved) messages.push("Restored after deletion");
   else {
+    if (before.sprintId !== after.sprintId)
+      messages.push(
+        after.sprintId
+          ? `Assigned to sprint #${after.sprintId}`
+          : "Sprint assignment cleared",
+      );
     if (before.title !== after.title) messages.push("Title updated");
     if (before.description !== after.description)
       messages.push("Description updated");

@@ -26,6 +26,8 @@ export function TaskWorkspace({
   const {
     tasks,
     epics,
+    sprints,
+    assignSprint,
     ready,
     error,
     createTask,
@@ -133,6 +135,7 @@ export function TaskWorkspace({
         epics={epics}
         assignees={assignees}
         labels={[...new Set(tasks.flatMap((task) => task.labels))].sort()}
+        sprints={sprints}
       />
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <p
@@ -205,6 +208,8 @@ export function TaskWorkspace({
         Saved in this browser · Starts with sample tasks.
       </p>
       <TaskDetailsDialog
+        sprints={sprints}
+        onAssignSprint={assignSprint}
         task={selectedTask}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}

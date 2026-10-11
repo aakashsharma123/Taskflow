@@ -107,6 +107,7 @@ const taskFixtures = [
   | "labels"
   | "dueDate"
   | "activity"
+  | "sprintId"
 >[];
 
 export const sampleTasks: Task[] = taskFixtures.map((task) => ({
@@ -117,6 +118,7 @@ export const sampleTasks: Task[] = taskFixtures.map((task) => ({
   dueDate: null,
   archived: false,
   placement: "board",
+  sprintId: null,
   subtasks:
     task.id === 14
       ? [
