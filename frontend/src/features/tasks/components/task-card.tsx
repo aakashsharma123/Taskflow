@@ -1,50 +1,75 @@
-import { TaskMetadata } from "./task-metadata";
 import type { ReactNode } from "react";
 import type { Task } from "@/features/tasks/types/task";
-
-const epicStyles: Record<string, string> = {
-  Authentication: "bg-violet-50 text-violet-800",
-  "Task management": "bg-orange-50 text-orange-900",
-  Workspace: "bg-teal-50 text-teal-800",
-};
-
-const priorityStyles = {
-  high: "bg-rose-50 text-rose-800",
-  medium: "bg-amber-50 text-amber-900",
-  low: "bg-slate-100 text-slate-700",
-};
+import { epicAccent } from "@/features/epics/lib/epic-accent";
+import { Lozenge } from "@/shared/ui/lozenge";
+import { TaskTypeIcon } from "./task-icons";
+import {
+  TaskAssignee,
+  TaskDueDate,
+  TaskLabels,
+  TaskPriority,
+} from "./task-metadata";
 
 export function TaskCard({
   task,
+  epics,
   onOpen,
   dragHandle,
 }: {
   task: Task;
+  epics: string[];
   onOpen: () => void;
-  dragHandle?: ReactNode;
+  dragHandle: ReactNode;
 }) {
   const completedSubtasks = task.subtasks.filter(
     (subtask) => subtask.completed,
   ).length;
-  const initials = task.assignee
-    ?.split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("");
 
   return (
-    <article className="task-card relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-base-300/80 bg-base-100 p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="flex items-center gap-2 text-[10px] font-medium tracking-wide text-base-content/70">
-          <span
-            aria-hidden="true"
-            className="h-1.5 w-5 rounded-full bg-secondary"
-          />
-          ORB-{task.id}
-        </span>
-        <div className="flex items-center gap-1">
-          {task.status === "done" && (
-            <span className="flex items-center gap-1 text-[10px] font-medium text-teal-800">
+    // The card handles clicks, so the title button and the rest of the card open the same task.
+    <article
+      onClick={onOpen}
+      className="group relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-md bg-base-100 p-3 shadow-raised hover:bg-raised-hover"
+    >
+      <h3 className="pr-7 [overflow-wrap:anywhere]">
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          data-task-id={task.id}
+          aria-label={`Open ORB-${task.id}: ${task.title}`}
+          className="cursor-pointer text-left"
+        >
+          {task.title}
+        </button>
+      </h3>
+      <div
+        className="absolute top-2 right-2"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {dragHandle}
+      </div>
+      {task.epic && (
+        <div>
+          <Lozenge className={epicAccent(epics, task.epic)}>
+            {task.epic}
+          </Lozenge>
+        </div>
+      )}
+      <TaskLabels task={task} />
+      {task.dueDate && (
+        <div>
+          <TaskDueDate task={task} />
+        </div>
+      )}
+      <div className="flex items-center gap-2">
+        <TaskTypeIcon />
+        <span className="text-xs font-semibold text-subtle">ORB-{task.id}</span>
+        <span className="ml-auto flex items-center gap-2">
+          {task.subtasks.length > 0 && (
+            <span
+              title="Subtasks done"
+              className="inline-flex items-center gap-1 text-xs text-subtle"
+            >
               <svg
                 aria-hidden="true"
                 viewBox="0 0 16 16"
@@ -53,93 +78,15 @@ export function TaskCard({
                 strokeWidth="1.5"
                 className="size-3.5"
               >
-                <circle cx="8" cy="8" r="6" />
+                <rect x="2" y="2" width="12" height="12" rx="2" />
                 <path d="m5 8 2 2 4-4" />
               </svg>
-              Done
+              {completedSubtasks}/{task.subtasks.length}
+              <span className="sr-only"> subtasks done</span>
             </span>
           )}
-          {dragHandle}
-        </div>
-      </div>
-      <h3 className="min-h-12 text-[13px] leading-6 font-semibold tracking-[-0.01em] [overflow-wrap:anywhere]">
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          data-task-id={task.id}
-          aria-label={`Open ORB-${task.id}: ${task.title}`}
-          onClick={onOpen}
-          className="w-full cursor-pointer rounded-sm text-left hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-4"
-        >
-          {task.title}
-        </button>
-      </h3>
-      <div className="mt-4 mb-5 min-h-7">
-        {task.epic && (
-          <span
-            className={`inline-flex max-w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-[10px] font-medium ${epicStyles[task.epic] ?? "bg-base-200 text-base-content"}`}
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 20 20"
-              fill="none"
-              className="size-3.5 shrink-0"
-            >
-              <circle cx="10" cy="10" r="3" fill="currentColor" />
-              <ellipse
-                cx="10"
-                cy="10"
-                rx="8"
-                ry="4"
-                transform="rotate(-35 10 10)"
-                stroke="currentColor"
-              />
-            </svg>
-            <span className="[overflow-wrap:anywhere]">{task.epic}</span>
-          </span>
-        )}
-      </div>
-      <TaskMetadata task={task} />
-      {task.subtasks.length > 0 && (
-        <div className="mb-4 flex items-center gap-3">
-          <progress
-            aria-label={`ORB-${task.id} completed subtasks`}
-            className="progress progress-primary h-1 min-w-0 flex-1"
-            value={completedSubtasks}
-            max={task.subtasks.length}
-          />
-          <span className="shrink-0 text-[10px] font-medium text-base-content/75">
-            {completedSubtasks}/{task.subtasks.length} subtasks
-          </span>
-        </div>
-      )}
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-base-300/60 pt-3">
-        <span
-          className="flex min-w-0 items-center gap-2"
-          aria-label={
-            task.assignee ? `Assigned to ${task.assignee}` : "Unassigned"
-          }
-          title={task.assignee ?? "Unassigned"}
-        >
-          <span
-            aria-hidden="true"
-            className={`grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-semibold ${task.assignee ? "bg-primary text-primary-content" : "border border-dashed border-base-content/30 text-base-content/70"}`}
-          >
-            {initials ?? "—"}
-          </span>
-          <span
-            aria-hidden="true"
-            className="truncate text-[10px] font-medium text-base-content/75"
-          >
-            {task.assignee?.split(" ")[0] ?? "Unassigned"}
-          </span>
-        </span>
-        <span
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-medium ${priorityStyles[task.priority]}`}
-        >
-          <span aria-hidden="true" className="size-1 rounded-full bg-current" />
-          <span className="capitalize">{task.priority}</span>
-          <span className="sr-only"> priority</span>
+          <TaskPriority task={task} />
+          <TaskAssignee task={task} />
         </span>
       </div>
     </article>

@@ -21,6 +21,7 @@ import {
 } from "@/features/tasks/schemas/create-task-schema";
 import { subtaskTitleSchema } from "@/features/tasks/schemas/subtask-schema";
 import { createEpicSchema } from "@/features/epics/schemas/create-epic-schema";
+import { taskSprintStatus } from "@/features/sprints/lib/task-sprint-state";
 
 export const TASK_STORAGE_KEY = "orbit.workspace.v1";
 
@@ -100,8 +101,7 @@ export function createTaskStore(
           (task) =>
             task.sprintId !== null &&
             (task.archived ||
-              (sprints.find((sprint) => sprint.id === task.sprintId)?.status ===
-                "active" &&
+              (taskSprintStatus(task, sprints) === "active" &&
                 task.placement !== "board")),
         )
       )
@@ -351,9 +351,7 @@ export function createTaskStore(
       if (!task || task.archived) return missingTask;
       if (
         placement === "backlog" &&
-        snapshot.sprints.some(
-          (sprint) => sprint.id === task.sprintId && sprint.status === "active",
-        )
+        taskSprintStatus(task, snapshot.sprints) === "active"
       )
         return {
           ok: false,
@@ -393,17 +391,13 @@ export function createTaskStore(
         [
           {
             ...task,
-            placement: snapshot.sprints.some(
-              (sprint) =>
-                sprint.id === task.sprintId && sprint.status === "active",
-            )
-              ? "board"
-              : task.placement,
+            placement:
+              taskSprintStatus(task, snapshot.sprints) === "active"
+                ? "board"
+                : task.placement,
             sprintId:
-              snapshot.sprints.some(
-                (sprint) =>
-                  sprint.id === task.sprintId && sprint.status === "completed",
-              ) && task.status !== "done"
+              taskSprintStatus(task, snapshot.sprints) === "completed" &&
+              task.status !== "done"
                 ? null
                 : task.sprintId,
           },
@@ -424,10 +418,7 @@ export function createTaskStore(
         status,
         sprintId:
           status !== "done" &&
-          snapshot.sprints.some(
-            (sprint) =>
-              sprint.id === task.sprintId && sprint.status === "completed",
-          )
+          taskSprintStatus(task, snapshot.sprints) === "completed"
             ? null
             : task.sprintId,
       });
@@ -470,10 +461,7 @@ export function createTaskStore(
         ...validated.data,
         sprintId:
           validated.data.status !== "done" &&
-          snapshot.sprints.some(
-            (sprint) =>
-              sprint.id === task.sprintId && sprint.status === "completed",
-          )
+          taskSprintStatus(task, snapshot.sprints) === "completed"
             ? null
             : task.sprintId,
       });

@@ -14,30 +14,28 @@ export function CompletionTrend({
   const maxCompleted = Math.max(1, ...trend.map((day) => day.completed ?? 0));
   return (
     <section
-      className="rounded-2xl border border-base-300/80 bg-base-100 p-5 sm:p-6"
+      className="rounded-md border border-line p-5"
       aria-labelledby="trend-heading"
     >
-      <h2 id="trend-heading" className="text-sm font-semibold">
+      <h2 id="trend-heading" className="text-base font-semibold">
         Completed tasks over time
       </h2>
-      <p className="mt-2 text-xs leading-6 text-base-content/60">
+      <p className="mt-1 text-subtle">
         Last 7 days · UTC · Daily total includes archived work. Reopening or
         deleting tasks can lower it.
       </p>
       <div
         aria-hidden="true"
-        className="mt-6 grid h-40 grid-cols-7 items-end gap-2 sm:gap-4"
+        className="mt-6 grid h-40 grid-cols-7 items-end gap-2"
       >
         {trend.map((day) => (
           <div
             key={day.date}
             className="flex h-full flex-col items-center justify-end gap-2"
           >
-            <span className="text-[11px] font-medium">
-              {day.completed ?? "—"}
-            </span>
+            <span className="text-xs font-medium">{day.completed ?? "—"}</span>
             <div
-              className={`w-full max-w-10 rounded-t-lg ${day.completed === null ? "border border-dashed border-base-300" : "bg-secondary"}`}
+              className={`w-full max-w-6 rounded-t ${day.completed === null ? "border border-dashed border-line-input" : "bg-primary"}`}
               style={{
                 height:
                   day.completed === null
@@ -45,7 +43,7 @@ export function CompletionTrend({
                     : `${Math.max(4, (day.completed / maxCompleted) * 65)}%`,
               }}
             />
-            <span className="text-[9px] whitespace-nowrap text-base-content/65">
+            <span className="text-[11px] whitespace-nowrap text-subtle">
               {day.date.slice(5)}
             </span>
           </div>
@@ -72,7 +70,7 @@ export function CompletionTrend({
           </tbody>
         </table>
       </div>
-      <p className="mt-5 text-[11px] leading-6 text-base-content/60">
+      <p className="mt-5 text-xs text-subtle">
         History starts when you save a change. Days before the first record are
         unknown; unchanged days keep the last known total.
       </p>

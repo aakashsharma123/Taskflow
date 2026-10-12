@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import "@fontsource/poppins/latin-400.css";
-import "@fontsource/poppins/latin-500.css";
-import "@fontsource/poppins/latin-600.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

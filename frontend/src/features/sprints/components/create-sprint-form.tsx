@@ -38,15 +38,15 @@ export function CreateSprintForm({
     if (saved.ok) form.reset();
   }
   return (
-    <details className="mb-6 rounded-2xl border border-base-300 bg-base-100 p-5">
-      <summary className="cursor-pointer text-sm font-semibold">
-        Create a sprint
+    <details className="mb-5">
+      <summary className="ui-button w-fit list-none [&::-webkit-details-marker]:hidden">
+        Create sprint
       </summary>
       <form
         aria-label="Create sprint"
         noValidate
         onSubmit={submit}
-        className="mt-5 space-y-4"
+        className="mt-3 space-y-4 rounded-md border border-line p-4 sm:max-w-2xl"
       >
         <fieldset
           disabled={disabled}
@@ -62,7 +62,7 @@ export function CreateSprintForm({
             <div key={field.name} className="flex min-w-0 flex-col gap-2">
               <label
                 htmlFor={`${id}-${field.name}`}
-                className="text-xs font-medium"
+                className="text-xs font-semibold text-subtle"
               >
                 {field.label}
               </label>
@@ -70,7 +70,7 @@ export function CreateSprintForm({
                 id={`${id}-${field.name}`}
                 name={field.name}
                 type={field.type}
-                className="input w-full min-w-0 rounded-xl border-base-300 text-sm"
+                className="ui-field"
                 aria-invalid={Boolean(errors[field.name])}
                 aria-describedby={
                   errors[field.name] ? `${id}-${field.name}-error` : undefined
@@ -79,7 +79,7 @@ export function CreateSprintForm({
               {errors[field.name] && (
                 <p
                   id={`${id}-${field.name}-error`}
-                  className="text-xs text-rose-800"
+                  className="text-xs text-danger-text"
                 >
                   {errors[field.name]?.[0]}
                 </p>
@@ -87,38 +87,38 @@ export function CreateSprintForm({
             </div>
           ))}
           <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
-            <label htmlFor={`${id}-goal`} className="text-xs font-medium">
+            <label
+              htmlFor={`${id}-goal`}
+              className="text-xs font-semibold text-subtle"
+            >
               Sprint goal (optional)
             </label>
             <textarea
               id={`${id}-goal`}
               name="goal"
               rows={2}
-              className="textarea w-full rounded-xl border-base-300 text-sm"
+              className="ui-field"
               placeholder="What will this sprint achieve?"
               aria-invalid={Boolean(errors.goal)}
               aria-describedby={errors.goal ? `${id}-goal-error` : undefined}
             />
             {errors.goal && (
-              <p id={`${id}-goal-error`} className="text-xs text-rose-800">
+              <p id={`${id}-goal-error`} className="text-xs text-danger-text">
                 {errors.goal[0]}
               </p>
             )}
           </div>
-          <button
-            className="btn btn-primary w-fit rounded-xl text-xs"
-            type="submit"
-          >
+          <button className="ui-button ui-button-primary w-fit" type="submit">
             Create sprint
           </button>
         </fieldset>
         {Object.keys(errors).length > 0 && (
-          <p role="alert" className="text-xs text-rose-800">
+          <p role="alert" className="text-sm text-danger-text">
             Review the highlighted sprint fields.
           </p>
         )}
         {error && (
-          <p role="alert" className="text-xs text-rose-800">
+          <p role="alert" className="text-sm text-danger-text">
             {error}
           </p>
         )}

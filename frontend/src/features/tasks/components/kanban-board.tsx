@@ -9,12 +9,14 @@ import {
 import type { Task, TaskStatus } from "@/features/tasks/types/task";
 export function KanbanBoard({
   tasks,
+  epics,
   disabled,
   filtered,
   onOpen,
   onMove,
 }: {
   tasks: Task[];
+  epics: string[];
   disabled: boolean;
   filtered: boolean;
   onOpen: (id: number) => void;
@@ -39,48 +41,57 @@ export function KanbanBoard({
         role="region"
         aria-label="Task board, scroll horizontally to see all columns"
         tabIndex={0}
-        className="board-scroll overflow-x-auto rounded-lg pb-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+        className="board-scroll overflow-x-auto rounded-md pb-4"
       >
-        <div className="grid min-w-[1020px] grid-cols-4 items-stretch gap-4">
+        <div className="grid grid-cols-[repeat(4,minmax(15rem,20rem))] items-stretch gap-2">
           {taskColumns.map((column) => {
             const items = tasks.filter((task) => task.status === column.status);
             return (
               <BoardColumn key={column.status} status={column.status}>
-                <div className="flex items-center gap-2 px-1.5 pt-2 pb-4">
-                  <span
-                    aria-hidden="true"
-                    className={`size-2 rounded-full ${column.dot}`}
-                  />
+                <div className="flex items-center gap-2 px-2 pt-1.5 pb-3">
                   <h2
                     id={`column-${column.status}`}
-                    className="text-[11px] font-semibold tracking-wider text-base-content/75 uppercase"
+                    className="text-xs font-semibold tracking-wide text-subtle uppercase"
                   >
-                    {column.label}
+                    {column.label}{" "}
+                    <span className="font-normal">
+                      {items.length}
+                      <span className="sr-only"> tasks</span>
+                    </span>
                   </h2>
-                  <span
-                    aria-label={`${items.length} tasks`}
-                    className="rounded bg-base-300/60 px-1.5 py-0.5 text-[10px] font-medium text-base-content/70"
-                  >
-                    {items.length}
-                  </span>
+                  {column.status === "done" && (
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="size-4 text-icon-done"
+                    >
+                      <path d="m3.5 8.5 3 3 6-7" />
+                    </svg>
+                  )}
                 </div>
                 {items.length ? (
                   <ul
                     aria-label={`${column.label} tasks`}
-                    className="flex flex-col gap-3"
+                    className="flex flex-col gap-1.5"
                   >
                     {items.map((task) => (
                       <li key={task.id}>
                         <DraggableTaskCard
                           disabled={disabled}
                           task={task}
+                          epics={epics}
                           onOpen={() => onOpen(task.id)}
                         />
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="rounded-md border border-dashed border-base-300 px-4 py-8 text-center text-xs leading-6 text-base-content/65">
+                  <p className="px-2 py-6 text-center text-xs text-subtle">
                     {filtered ? "No matching tasks" : "No tasks here yet"}
                   </p>
                 )}

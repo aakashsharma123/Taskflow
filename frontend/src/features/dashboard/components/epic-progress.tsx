@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { summarizeProject } from "@/features/dashboard/lib/project-summary";
+import { EpicIcon } from "@/features/tasks/components/task-icons";
 export function EpicProgress({
   epics,
 }: {
@@ -7,33 +8,36 @@ export function EpicProgress({
 }) {
   return (
     <section
-      className="rounded-2xl border border-base-300/80 bg-base-100 p-5 sm:p-6"
+      className="rounded-md border border-line p-5"
       aria-labelledby="epic-progress"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="epic-progress" className="text-sm font-semibold">
+          <h2 id="epic-progress" className="text-base font-semibold">
             Epic progress
           </h2>
-          <p className="mt-2 text-xs text-base-content/60">
+          <p className="mt-1 text-subtle">
             All saved tasks, including archived work.
           </p>
         </div>
-        <Link href="/backlog" className="btn btn-ghost btn-sm text-xs">
-          Plan next steps <span aria-hidden="true">↗</span>
+        <Link href="/backlog" className="ui-button ui-button-subtle">
+          Plan next steps
         </Link>
       </div>
-      <ul className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <ul className="mt-5 space-y-4">
         {epics.map((epic) => (
-          <li key={epic.name} className="rounded-xl bg-base-200/60 p-4">
-            <h3 className="text-xs font-semibold [overflow-wrap:anywhere]">
-              {epic.name}
-            </h3>
-            <p className="mt-2 text-[11px] text-base-content/65">
-              {epic.completed} of {epic.total} tasks done · {epic.percent}%
-            </p>
+          <li key={epic.name}>
+            <div className="mb-1.5 flex items-center gap-2">
+              <EpicIcon />
+              <h3 className="min-w-0 flex-1 font-medium [overflow-wrap:anywhere]">
+                {epic.name}
+              </h3>
+              <span className="shrink-0 text-xs text-subtle">
+                {epic.completed} of {epic.total} done · {epic.percent}%
+              </span>
+            </div>
             <progress
-              className="progress progress-primary mt-3 w-full"
+              className="progress h-1.5 w-full text-icon-done"
               value={epic.percent}
               max={100}
               aria-label={`${epic.name} completion`}
@@ -42,7 +46,7 @@ export function EpicProgress({
         ))}
       </ul>
       {!epics.length && (
-        <p className="mt-5 text-xs text-base-content/60">
+        <p className="mt-5 text-subtle">
           Create an epic on Board to track a larger goal here.
         </p>
       )}

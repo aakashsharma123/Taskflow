@@ -35,18 +35,23 @@ export function CreateTaskDialog({
         <button
           type="button"
           disabled={disabled}
-          className="btn btn-primary h-10 rounded-xl px-4 text-xs"
+          className="ui-button ui-button-primary"
         >
-          <span aria-hidden="true" className="text-lg font-normal">
-            +
-          </span>
-          New task
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            className="size-4"
+          >
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+          Create
         </button>
       </Dialog.Trigger>
-      <DialogPanel
-        title="New task"
-        description="Turn your next idea into a clear, actionable task."
-      >
+      <DialogPanel title="Create task">
         <TaskForm
           epics={epics}
           assignees={assignees}

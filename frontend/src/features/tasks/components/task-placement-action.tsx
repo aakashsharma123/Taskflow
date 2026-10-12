@@ -13,29 +13,33 @@ export function TaskPlacementAction({
   const destination = task.placement === "board" ? "backlog" : "board";
   return (
     <section
-      className="mb-4 rounded-xl bg-base-200 p-4"
       aria-label="Task location"
+      className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-3"
     >
-      <p className="text-xs leading-6">
-        This task is in {task.placement === "board" ? "Board" : "Backlog"}.
-        Moving it keeps its status and subtasks. Unsaved form changes will be
-        discarded.
-      </p>
-      <button
-        type="button"
-        className="btn btn-outline btn-sm mt-3"
-        onClick={() => {
-          const result = onMove(destination);
-          if (!result.ok) setError(result.error);
-        }}
-      >
-        Move to {destination === "board" ? "Board" : "Backlog"}
-      </button>
-      {error && (
-        <p role="alert" className="mt-2 text-xs text-rose-800">
-          {error}
+      <span className="pt-1.5 text-sm font-medium text-subtle">Location</span>
+      <div className="min-w-0">
+        <p className="pt-1.5">
+          {task.placement === "board" ? "Board" : "Backlog"}
         </p>
-      )}
+        <button
+          type="button"
+          className="ui-button ui-button-compact mt-1"
+          onClick={() => {
+            const result = onMove(destination);
+            if (!result.ok) setError(result.error);
+          }}
+        >
+          Move to {destination === "board" ? "Board" : "Backlog"}
+        </button>
+        <p className="mt-1 text-xs text-subtlest">
+          Keeps its status and subtasks. Unsaved form changes will be discarded.
+        </p>
+        {error && (
+          <p role="alert" className="mt-1 text-sm text-danger-text">
+            {error}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
