@@ -38,7 +38,7 @@ export function EpicCollection({
   ];
   return (
     <section aria-label="Project epics">
-      <dl className="mb-6 grid grid-cols-3 divide-x divide-line rounded-md border border-line">
+      <dl className="mb-6 grid grid-cols-3 divide-x divide-line overflow-hidden rounded-xl border border-line">
         {metrics.map((metric) => (
           <div key={metric.label} className="flex min-w-0 flex-col px-4 py-3">
             <dt className="text-xs text-subtle">{metric.label}</dt>
@@ -52,7 +52,7 @@ export function EpicCollection({
         Progress by epic
       </h3>
       {groups.length ? (
-        <ul className="divide-y divide-line rounded-md border border-line">
+        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
           {groups.map((group) => {
             const state =
               group.total === 0

@@ -71,7 +71,7 @@ export function TaskWorkspace({
 
   if (!ready)
     return (
-      <p role="status" className="text-subtle">
+      <p role="status" className="text-xs text-subtlest tabular-nums">
         Loading your workspace…
       </p>
     );
@@ -87,7 +87,7 @@ export function TaskWorkspace({
       {mode === "backlog" && (
         <OpenSprints disabled={disabled} onOpenTask={openTask} />
       )}
-      <div className="mb-5 flex flex-wrap items-start gap-x-4 gap-y-2">
+      <div className="ui-panel mb-6 flex flex-wrap items-start gap-x-4 gap-y-3 p-3 sm:p-4">
         <TaskFilterToolbar
           filters={filters}
           onChange={setFilters}
@@ -97,8 +97,8 @@ export function TaskWorkspace({
           sprints={sprints}
           sprintFilter={mode !== "backlog"}
         />
-        <div className="ml-auto flex items-center gap-3">
-          <p role="status" className="text-subtle">
+        <div className="ml-auto flex min-h-10 items-center gap-3">
+          <p role="status" className="text-xs text-subtlest tabular-nums">
             {filteredTasks.length} of {eligibleTasks.length} tasks
           </p>
           <EpicsDialog
@@ -159,7 +159,7 @@ export function TaskWorkspace({
           </p>
         </>
       )}
-      <p className="mt-2 text-xs text-subtle">
+      <p className="mt-4 text-[11px] text-subtlest">
         Saved in this browser · Starts with sample tasks.
       </p>
       <TaskDetailsDialog

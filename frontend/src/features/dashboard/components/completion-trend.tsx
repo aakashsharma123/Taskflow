@@ -13,29 +13,28 @@ export function CompletionTrend({
   const trend = completionTrend(history, tasks, today);
   const maxCompleted = Math.max(1, ...trend.map((day) => day.completed ?? 0));
   return (
-    <section
-      className="rounded-md border border-line p-5"
-      aria-labelledby="trend-heading"
-    >
-      <h2 id="trend-heading" className="text-base font-semibold">
+    <section className="ui-panel p-6 sm:p-7" aria-labelledby="trend-heading">
+      <h2 id="trend-heading" className="ui-section-title">
         Completed tasks over time
       </h2>
-      <p className="mt-1 text-subtle">
+      <p className="mt-1.5 text-xs leading-5 text-subtle">
         Last 7 days · UTC · Daily total includes archived work. Reopening or
         deleting tasks can lower it.
       </p>
       <div
         aria-hidden="true"
-        className="mt-6 grid h-40 grid-cols-7 items-end gap-2"
+        className="mt-8 grid h-44 grid-cols-7 items-end gap-2"
       >
         {trend.map((day) => (
           <div
             key={day.date}
             className="flex h-full flex-col items-center justify-end gap-2"
           >
-            <span className="text-xs font-medium">{day.completed ?? "—"}</span>
+            <span className="text-xs font-medium tabular-nums">
+              {day.completed ?? "—"}
+            </span>
             <div
-              className={`w-full max-w-6 rounded-t ${day.completed === null ? "border border-dashed border-line-input" : "bg-primary"}`}
+              className={`w-full max-w-7 rounded-t-md ${day.completed === null ? "border border-dashed border-line-input" : "bg-primary"}`}
               style={{
                 height:
                   day.completed === null
@@ -70,7 +69,7 @@ export function CompletionTrend({
           </tbody>
         </table>
       </div>
-      <p className="mt-5 text-xs text-subtle">
+      <p className="mt-5 text-[11px] leading-5 text-subtlest">
         History starts when you save a change. Days before the first record are
         unknown; unchanged days keep the last known total.
       </p>

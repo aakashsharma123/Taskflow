@@ -1,3 +1,6 @@
+"use client";
+
+import { m } from "framer-motion";
 import { TaskRow } from "./task-row";
 import type { Task } from "@/features/tasks/types/task";
 export function TaskList({
@@ -21,9 +24,9 @@ export function TaskList({
       role="region"
       aria-label={mode === "archive" ? "Archived tasks" : "Backlog tasks"}
       tabIndex={0}
-      className="overflow-hidden rounded-md border border-line"
+      className="ui-panel overflow-hidden"
     >
-      <div className="flex items-center gap-2 border-b border-line bg-sunken px-3 py-2.5">
+      <div className="flex items-center gap-2 border-b border-line bg-panel-soft px-5 py-4">
         <h2 className="font-semibold">{title}</h2>
         <span className="text-subtle">
           {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
@@ -31,8 +34,13 @@ export function TaskList({
       </div>
       {tasks.length ? (
         <ul className="divide-y divide-line">
-          {tasks.map((task) => (
-            <li key={task.id}>
+          {tasks.map((task, index) => (
+            <m.li
+              key={task.id}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.22, delay: Math.min(index, 6) * 0.025 }}
+            >
               <TaskRow
                 task={task}
                 epics={epics}
@@ -51,11 +59,11 @@ export function TaskList({
                   )
                 }
               />
-            </li>
+            </m.li>
           ))}
         </ul>
       ) : (
-        <div className="px-5 py-10 text-center">
+        <div className="px-6 py-16 text-center">
           <h3 className="font-semibold">
             {mode === "archive"
               ? "No archived tasks in this view"

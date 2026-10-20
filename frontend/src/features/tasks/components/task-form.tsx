@@ -74,7 +74,7 @@ function Field({
       className={
         inline
           ? "grid min-w-0 grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-3"
-          : "flex min-w-0 flex-col gap-1"
+          : "flex min-w-0 flex-col gap-2"
       }
     >
       <label
@@ -87,7 +87,7 @@ function Field({
       >
         {label}
       </label>
-      <div className="flex min-w-0 flex-col gap-1">{children}</div>
+      <div className="flex min-w-0 flex-col gap-2">{children}</div>
     </div>
   );
 }
@@ -157,7 +157,7 @@ export function TaskForm({
   }
 
   const titleField = (
-    <div className="flex min-w-0 flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-2">
       <label
         htmlFor={`${fieldId}-title`}
         className={details ? "sr-only" : "text-xs font-semibold text-subtle"}
@@ -189,7 +189,7 @@ export function TaskForm({
   );
 
   const descriptionField = (
-    <div className="flex min-w-0 flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-2">
       <label
         htmlFor={`${fieldId}-description`}
         className={
@@ -421,7 +421,7 @@ export function TaskForm({
             </div>
             <section
               aria-labelledby={`${fieldId}-details-heading`}
-              className="rounded-md border border-line"
+              className="rounded-xl border border-line bg-panel-soft/50"
             >
               <h3
                 id={`${fieldId}-details-heading`}
@@ -429,7 +429,7 @@ export function TaskForm({
               >
                 Details
               </h3>
-              <div className="space-y-2 p-4">
+              <div className="space-y-4 p-4">
                 {detailFields}
                 {side}
               </div>
@@ -456,7 +456,7 @@ export function TaskForm({
           </div>
         </div>
       )}
-      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-line px-6 py-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-line bg-panel-soft/50 px-6 py-4">
         <div className="mr-auto min-w-0">{alerts}</div>
         <Dialog.CloseTrigger asChild>
           <button type="button" className="ui-button ui-button-subtle">

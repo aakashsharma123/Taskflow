@@ -68,10 +68,10 @@ export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
         Subtask changes save immediately. The parent task keeps its own status.
       </p>
       {task.subtasks.length > 0 ? (
-        <ul className="mb-3 divide-y divide-line rounded-md border border-line">
+        <ul className="mb-3 divide-y divide-line overflow-hidden rounded-xl border border-line">
           {task.subtasks.map((subtask) => (
             <li key={subtask.id}>
-              <label className="flex min-h-10 cursor-pointer items-center gap-3 px-3 py-2 hover:bg-raised-hover">
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 px-3 py-2 hover:bg-raised-hover">
                 <input
                   type="checkbox"
                   checked={subtask.completed}

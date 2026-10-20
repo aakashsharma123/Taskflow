@@ -44,15 +44,12 @@ export function ProjectSettingsForm({
     setNotice(saved.ok ? "Project settings saved." : "");
   }
   return (
-    <section
-      aria-labelledby={`${id}-heading`}
-      className="rounded-2xl border border-base-300/80 bg-base-100 p-5 sm:p-6"
-    >
-      <h2 id={`${id}-heading`} className="text-lg font-semibold">
+    <section aria-labelledby={`${id}-heading`} className="ui-panel p-5 sm:p-7">
+      <h2 id={`${id}-heading`} className="ui-section-title">
         Project & appearance
       </h2>
-      <p className="mt-2 text-xs leading-6 text-base-content/65">
-        Choose a name and a calm accent for your workspace.
+      <p className="mt-2 text-sm leading-6 text-subtle">
+        Set the project name and accent used in your workspace identity.
       </p>
       <form
         aria-label="Project settings"
@@ -77,7 +74,7 @@ export function ProjectSettingsForm({
               }
             />
             {errors.projectName && (
-              <p id={`${id}-name-error`} className="text-xs text-rose-800">
+              <p id={`${id}-name-error`} className="text-xs text-danger-text">
                 {errors.projectName[0]}
               </p>
             )}
@@ -91,7 +88,7 @@ export function ProjectSettingsForm({
                 ([value, appearance]) => (
                   <label
                     key={value}
-                    className="flex cursor-pointer items-center gap-3 rounded-xl border border-base-300 p-3 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary"
+                    className="flex cursor-pointer flex-wrap items-center gap-2 rounded-xl border border-line bg-panel-soft/50 p-3 transition-colors hover:bg-hover has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary"
                   >
                     <input
                       type="radio"
@@ -105,7 +102,7 @@ export function ProjectSettingsForm({
                       className="size-5 shrink-0 rounded-full border border-primary/10"
                       style={{ backgroundColor: appearance.accent }}
                     />
-                    <span className="text-xs font-medium">
+                    <span className="w-full text-xs font-medium">
                       {appearance.name}
                     </span>
                   </label>
@@ -113,26 +110,26 @@ export function ProjectSettingsForm({
               )}
             </div>
             {errors.appearance && (
-              <p className="mt-2 text-xs text-rose-800">
+              <p className="mt-2 text-xs text-danger-text">
                 {errors.appearance[0]}
               </p>
             )}
           </fieldset>
-          <button type="submit" className="btn btn-primary rounded-xl text-xs">
+          <button type="submit" className="ui-button ui-button-primary">
             Save settings
           </button>
         </fieldset>
         {Object.keys(errors).length > 0 && (
-          <p role="alert" className="text-xs text-rose-800">
+          <p role="alert" className="text-xs text-danger-text">
             Review the highlighted settings.
           </p>
         )}
         {error && (
-          <p role="alert" className="text-xs leading-6 text-rose-800">
+          <p role="alert" className="text-xs leading-6 text-danger-text">
             {error}
           </p>
         )}
-        <p role="status" className="text-xs text-teal-800">
+        <p role="status" className="text-xs text-success-text">
           {notice}
         </p>
       </form>

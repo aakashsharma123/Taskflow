@@ -7,16 +7,13 @@ export function EpicProgress({
   epics: ReturnType<typeof summarizeProject>["epics"];
 }) {
   return (
-    <section
-      className="rounded-md border border-line p-5"
-      aria-labelledby="epic-progress"
-    >
+    <section className="ui-panel p-6 sm:p-7" aria-labelledby="epic-progress">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="epic-progress" className="text-base font-semibold">
+          <h2 id="epic-progress" className="ui-section-title">
             Epic progress
           </h2>
-          <p className="mt-1 text-subtle">
+          <p className="mt-1.5 text-xs leading-5 text-subtle">
             All saved tasks, including archived work.
           </p>
         </div>
@@ -32,7 +29,7 @@ export function EpicProgress({
               <h3 className="min-w-0 flex-1 font-medium [overflow-wrap:anywhere]">
                 {epic.name}
               </h3>
-              <span className="shrink-0 text-xs text-subtle">
+              <span className="shrink-0 text-[11px] text-subtlest">
                 {epic.completed} of {epic.total} done · {epic.percent}%
               </span>
             </div>

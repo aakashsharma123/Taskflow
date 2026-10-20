@@ -1,3 +1,6 @@
+"use client";
+
+import { m } from "framer-motion";
 import type { ReactNode } from "react";
 import type { Task } from "@/features/tasks/types/task";
 import { epicAccent } from "@/features/epics/lib/epic-accent";
@@ -15,39 +18,45 @@ export function TaskCard({
   epics,
   onOpen,
   dragHandle,
+  isDragging = false,
 }: {
   task: Task;
   epics: string[];
   onOpen: () => void;
   dragHandle: ReactNode;
+  isDragging?: boolean;
 }) {
   const completedSubtasks = task.subtasks.filter(
     (subtask) => subtask.completed,
   ).length;
-
   return (
-    // The card handles clicks, so the title button and the rest of the card open the same task.
-    <article
+    <m.article
       onClick={onOpen}
-      className="group relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-md bg-base-100 p-3 shadow-raised hover:bg-raised-hover"
+      whileHover={isDragging ? undefined : { y: -2 }}
+      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+      className="task-card group relative flex min-w-0 cursor-pointer flex-col gap-3.5 p-4"
     >
-      <h3 className="pr-7 [overflow-wrap:anywhere]">
+      <div className="flex items-center gap-2">
+        <TaskTypeIcon />
+        <span className="text-[11px] font-medium tracking-wide text-subtlest tabular-nums">
+          ORB-{task.id}
+        </span>
+        <span className="ml-auto">
+          <TaskPriority task={task} />
+        </span>
+        <div onClick={(event) => event.stopPropagation()}>{dragHandle}</div>
+      </div>
+      <h3 className="text-sm leading-[1.6] font-medium [overflow-wrap:anywhere]">
         <button
           type="button"
           aria-haspopup="dialog"
           data-task-id={task.id}
           aria-label={`Open ORB-${task.id}: ${task.title}`}
-          className="cursor-pointer text-left"
+          className="cursor-pointer rounded text-left"
         >
           {task.title}
         </button>
       </h3>
-      <div
-        className="absolute top-2 right-2"
-        onClick={(event) => event.stopPropagation()}
-      >
-        {dragHandle}
-      </div>
       {task.epic && (
         <div>
           <Lozenge className={epicAccent(epics, task.epic)}>
@@ -56,39 +65,37 @@ export function TaskCard({
         </div>
       )}
       <TaskLabels task={task} />
-      {task.dueDate && (
-        <div>
-          <TaskDueDate task={task} />
-        </div>
-      )}
-      <div className="flex items-center gap-2">
-        <TaskTypeIcon />
-        <span className="text-xs font-semibold text-subtle">ORB-{task.id}</span>
-        <span className="ml-auto flex items-center gap-2">
-          {task.subtasks.length > 0 && (
-            <span
-              title="Subtasks done"
-              className="inline-flex items-center gap-1 text-xs text-subtle"
+      <div className="mt-0.5 flex flex-wrap items-center gap-2 border-t border-line pt-3">
+        {task.dueDate && <TaskDueDate task={task} />}
+        {task.subtasks.length > 0 && (
+          <span
+            title="Subtasks done"
+            className="inline-flex items-center gap-1.5 text-[11px] text-subtle tabular-nums"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="size-3.5"
             >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="size-3.5"
-              >
-                <rect x="2" y="2" width="12" height="12" rx="2" />
-                <path d="m5 8 2 2 4-4" />
-              </svg>
-              {completedSubtasks}/{task.subtasks.length}
-              <span className="sr-only"> subtasks done</span>
-            </span>
-          )}
-          <TaskPriority task={task} />
+              <rect x="2" y="2" width="12" height="12" rx="3" />
+              <path d="m5 8 2 2 4-4" />
+            </svg>
+            {completedSubtasks}/{task.subtasks.length}
+            <span className="sr-only"> subtasks done</span>
+          </span>
+        )}
+        {!task.dueDate && task.subtasks.length === 0 && (
+          <span className="text-[11px] text-subtlest">
+            {task.status === "done" ? "Completed" : "No due date"}
+          </span>
+        )}
+        <span className="ml-auto">
           <TaskAssignee task={task} />
         </span>
       </div>
-    </article>
+    </m.article>
   );
 }

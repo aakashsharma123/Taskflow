@@ -22,7 +22,7 @@ export function TaskRow({
     // The row handles clicks, so the title button and the rest of the row open the same task.
     <div
       onClick={onOpen}
-      className={`flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 hover:bg-raised-hover ${onOpen ? "cursor-pointer" : ""}`}
+      className={`flex flex-wrap items-center gap-x-3 gap-y-3 px-5 py-4 transition-colors hover:bg-raised-hover ${onOpen ? "cursor-pointer" : ""}`}
     >
       <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
         <TaskTypeIcon />
@@ -47,7 +47,7 @@ export function TaskRow({
           )}
         </span>
       </div>
-      <div className="ml-auto flex shrink-0 items-center gap-3">
+      <div className="ml-auto flex max-w-full flex-wrap items-center gap-3">
         {task.epic && (
           <span className="hidden max-w-40 sm:inline-flex">
             <Lozenge className={epicAccent(epics, task.epic)}>
