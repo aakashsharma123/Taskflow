@@ -11,7 +11,6 @@ import {
   type TaskFilters,
   type TaskSort,
 } from "@/features/tasks/lib/task-filters";
-import { Avatar } from "@/shared/ui/avatar";
 
 function FilterSelect<T extends string>({
   label,
@@ -63,12 +62,12 @@ function FilterSelect<T extends string>({
       </Select.Control>
       <Portal>
         <Select.Positioner>
-          <Select.Content className="z-50 max-h-72 min-w-48 overflow-y-auto rounded-md bg-base-100 py-1.5 shadow-overlay outline-none">
+          <Select.Content className="z-50 max-h-72 min-w-48 overflow-y-auto rounded-xl border border-line bg-base-100 p-1.5 shadow-overlay outline-none">
             {options.map((option) => (
               <Select.Item
                 key={option.value}
                 item={option}
-                className="flex cursor-pointer items-center gap-3 px-3 py-1.5 data-highlighted:bg-hover data-[state=checked]:bg-selected data-[state=checked]:text-primary"
+                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 data-highlighted:bg-hover data-[state=checked]:bg-selected data-[state=checked]:text-primary"
               >
                 <Select.ItemText className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                   {option.label}
@@ -105,33 +104,17 @@ function AssigneeFilter({
   assignees: string[];
   onChange: (value: string) => void;
 }) {
-  const options = [
-    ...assignees.map((name) => ({ value: name, name, label: name })),
-    { value: "unassigned", name: null, label: "Unassigned" },
-  ];
   return (
-    <div
-      role="group"
-      aria-label="Filter by assignee"
-      className="flex items-center -space-x-1"
-    >
-      {options.map((option) => {
-        const pressed = value === option.value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={pressed}
-            title={option.label}
-            onClick={() => onChange(pressed ? "" : option.value)}
-            className={`relative cursor-pointer rounded-full ring-2 transition-transform hover:z-10 hover:-translate-y-0.5 focus-visible:z-10 ${pressed ? "z-10 ring-primary" : "ring-base-100"}`}
-          >
-            <Avatar name={option.name} size="md" />
-            <span className="sr-only">{option.label}</span>
-          </button>
-        );
-      })}
-    </div>
+    <FilterSelect
+      label="Assignee"
+      value={value}
+      options={[
+        { value: "", label: "All assignees" },
+        ...assignees.map((name) => ({ value: name, label: name })),
+        { value: "unassigned", label: "Unassigned" },
+      ]}
+      onChange={onChange}
+    />
   );
 }
 
@@ -156,15 +139,18 @@ export function TaskFilterToolbar({
   const moreId = useId();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreActive = [
+    filters.epic,
+    filters.label,
+    sprintFilter && filters.sprint,
     filters.priority,
     filters.status,
     filters.due,
     filters.sort !== defaultTaskFilters.sort,
   ].filter(Boolean).length;
   return (
-    <div className="flex min-w-0 flex-col gap-2">
+    <div className="flex min-w-0 basis-full flex-col gap-3 xl:flex-1">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <label htmlFor={searchId} className="sr-only">
             Search tasks by title or task ID
           </label>
@@ -182,7 +168,7 @@ export function TaskFilterToolbar({
           <input
             id={searchId}
             type="search"
-            className="ui-field ui-field-compact w-44 pl-8"
+            className="ui-field ui-field-compact w-full bg-panel-soft/50 pl-9 sm:w-60"
             placeholder="Search tasks"
             value={filters.search}
             onChange={(event) =>
@@ -195,6 +181,40 @@ export function TaskFilterToolbar({
           assignees={assignees}
           onChange={(assignee) => onChange({ ...filters, assignee })}
         />
+        <button
+          type="button"
+          aria-expanded={moreOpen}
+          aria-controls={moreId}
+          className={`ui-button ${moreActive ? "ui-button-selected" : ""}`}
+          onClick={() => setMoreOpen((open) => !open)}
+        >
+          Filters{moreActive > 0 && ` (${moreActive})`}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            className="size-3.5"
+          >
+            <path d="M2 4h12M4 8h8M6 12h4" />
+          </svg>
+        </button>
+        {hasTaskFilters(filters) && (
+          <button
+            type="button"
+            className="ui-button ui-button-subtle"
+            onClick={() => onChange(defaultTaskFilters)}
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+      <div
+        id={moreId}
+        hidden={!moreOpen}
+        className="flex flex-wrap items-center gap-2 border-t border-line pt-3"
+      >
         <FilterSelect
           label="Epic"
           value={filters.epic}
@@ -228,30 +248,6 @@ export function TaskFilterToolbar({
             onChange={(sprint) => onChange({ ...filters, sprint })}
           />
         )}
-        <button
-          type="button"
-          aria-expanded={moreOpen}
-          aria-controls={moreId}
-          className={`ui-button ${moreActive ? "ui-button-selected" : ""}`}
-          onClick={() => setMoreOpen((open) => !open)}
-        >
-          More filters{moreActive > 0 && ` (${moreActive})`}
-        </button>
-        {hasTaskFilters(filters) && (
-          <button
-            type="button"
-            className="ui-button ui-button-subtle"
-            onClick={() => onChange(defaultTaskFilters)}
-          >
-            Clear filters
-          </button>
-        )}
-      </div>
-      <div
-        id={moreId}
-        hidden={!moreOpen}
-        className="flex flex-wrap items-center gap-2"
-      >
         <FilterSelect
           label="Priority"
           value={filters.priority}

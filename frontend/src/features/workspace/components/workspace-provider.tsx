@@ -15,6 +15,7 @@ import {
 } from "@/features/tasks/store/task-store";
 import { sampleTasks } from "@/features/tasks/data/sample-tasks";
 import { workspaceAppearances } from "@/features/settings/constants/workspace-appearances";
+import { useTheme } from "next-themes";
 
 function useWorkspaceStore() {
   const [store] = useState(() =>
@@ -71,18 +72,21 @@ const WorkspaceContext = createContext<ReturnType<
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const workspace = useWorkspaceStore();
+  const { resolvedTheme } = useTheme();
   const appearance = workspaceAppearances[workspace.settings.appearance];
   useEffect(() => {
     if (!workspace.ready || workspace.error) return;
     document.documentElement.style.setProperty(
       "--color-secondary",
-      appearance.accent,
+      resolvedTheme === "dark" ? appearance.darkAccent : appearance.accent,
     );
     document.documentElement.style.setProperty(
       "--color-workspace",
-      appearance.background,
+      resolvedTheme === "dark"
+        ? appearance.darkBackground
+        : appearance.background,
     );
-  }, [workspace.ready, workspace.error, appearance]);
+  }, [workspace.ready, workspace.error, appearance, resolvedTheme]);
   return (
     <WorkspaceContext.Provider value={workspace}>
       {children}

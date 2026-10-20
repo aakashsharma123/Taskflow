@@ -2,6 +2,7 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 import { memberNameSchema } from "../schemas/workspace-settings-schema";
 import type { SaveResult } from "@/features/tasks/store/task-store";
+import { Avatar } from "@/shared/ui/avatar";
 import type { Task } from "@/features/tasks/types/task";
 export function TeamMembers({
   members,
@@ -43,14 +44,11 @@ export function TeamMembers({
     inputRef.current?.focus();
   }
   return (
-    <section
-      aria-labelledby={`${id}-heading`}
-      className="rounded-2xl border border-base-300/80 bg-base-100 p-5 sm:p-6"
-    >
-      <h2 id={`${id}-heading`} className="text-lg font-semibold">
+    <section aria-labelledby={`${id}-heading`} className="ui-panel p-5 sm:p-7">
+      <h2 id={`${id}-heading`} className="ui-section-title">
         Team members
       </h2>
-      <p className="mt-2 text-xs leading-6 text-base-content/65">
+      <p className="mt-2 text-sm leading-6 text-subtle">
         Manage the names available in task assignments. Up to 50 local members.
       </p>
       <form aria-label="Add team member" onSubmit={add} className="mt-5">
@@ -72,18 +70,18 @@ export function TeamMembers({
           <button
             type="submit"
             disabled={disabled}
-            className="btn btn-primary rounded-xl text-xs"
+            className="ui-button ui-button-primary"
           >
             Add member
           </button>
         </div>
       </form>
       {members.length === 0 ? (
-        <p className="mt-5 text-xs text-base-content/60">
+        <p className="mt-5 text-xs text-subtlest">
           No team members yet. Tasks can remain unassigned.
         </p>
       ) : (
-        <ul className="mt-5 divide-y divide-base-300/70">
+        <ul className="mt-5 divide-y divide-line">
           {members.map((name) => {
             const assigned = tasks.filter(
               (task) => task.assignee === name,
@@ -91,11 +89,12 @@ export function TeamMembers({
             return (
               <li key={name} className="py-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold [overflow-wrap:anywhere]">
+                  <Avatar name={name} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium [overflow-wrap:anywhere]">
                       {name}
                     </p>
-                    <p className="mt-1 text-[11px] text-base-content/60">
+                    <p className="mt-1 text-[11px] text-subtlest">
                       {assigned} {assigned === 1 ? "task" : "tasks"} assigned,
                       including archive and undo records
                     </p>
@@ -104,7 +103,7 @@ export function TeamMembers({
                     <button
                       type="button"
                       disabled={disabled}
-                      className="btn btn-ghost btn-sm shrink-0 text-xs"
+                      className="ui-button ui-button-subtle ui-button-compact shrink-0"
                       aria-label={`Remove ${name}`}
                       onClick={() => {
                         setConfirm(name);
@@ -130,7 +129,7 @@ export function TeamMembers({
                         id={`${id}-confirm`}
                         type="button"
                         disabled={disabled}
-                        className="btn btn-primary btn-sm text-xs"
+                        className="ui-button ui-button-danger ui-button-compact"
                         onClick={() => {
                           const result = onRemove(name);
                           setError(result.ok ? "" : result.error);
@@ -147,7 +146,7 @@ export function TeamMembers({
                       </button>
                       <button
                         type="button"
-                        className="btn btn-ghost btn-sm text-xs"
+                        className="ui-button ui-button-subtle ui-button-compact"
                         onClick={() => {
                           setConfirm(null);
                           inputRef.current?.focus();
@@ -167,12 +166,12 @@ export function TeamMembers({
         <p
           id={`${id}-error`}
           role="alert"
-          className="mt-3 text-xs leading-6 text-rose-800"
+          className="mt-3 text-xs leading-6 text-danger-text"
         >
           {error}
         </p>
       )}
-      <p role="status" className="mt-3 text-xs text-teal-800">
+      <p role="status" className="mt-3 text-xs text-success-text">
         {notice}
       </p>
     </section>

@@ -71,9 +71,9 @@ export function SprintCard({
   return (
     <article
       aria-labelledby={`${id}-title`}
-      className={`overflow-hidden rounded-md border ${sprint.status === "active" ? "border-primary" : "border-line"}`}
+      className={`ui-panel overflow-hidden border ${sprint.status === "active" ? "border-primary" : "border-line"}`}
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 bg-sunken px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 bg-panel-soft px-5 py-4">
         <h2
           id={`${id}-title`}
           className="font-semibold [overflow-wrap:anywhere]"
@@ -118,7 +118,7 @@ export function SprintCard({
           )}
         </span>
       </div>
-      <div className="space-y-3 px-4 py-3">
+      <div className="space-y-4 px-5 py-5">
         {sprint.goal && (
           <p className="whitespace-pre-wrap text-subtle [overflow-wrap:anywhere]">
             {sprint.goal}

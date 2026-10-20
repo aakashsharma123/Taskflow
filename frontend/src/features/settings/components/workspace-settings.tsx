@@ -21,16 +21,16 @@ export function WorkspaceSettings() {
       </p>
     );
   return (
-    <div className="space-y-6">
+    <div className="grid max-w-6xl items-start gap-6 xl:grid-cols-[1fr_1.15fr]">
       {error && (
         <div
           role="alert"
-          className="rounded-xl bg-rose-50 p-4 text-xs leading-6 text-rose-800"
+          className="xl:col-span-2 rounded-xl bg-danger-subtle p-4 text-xs leading-6 text-danger-text"
         >
           {error}
           <button
             type="button"
-            className="btn btn-ghost btn-sm ml-2"
+            className="ui-button ui-button-subtle ui-button-compact ml-2"
             onClick={reload}
           >
             Try again
@@ -49,7 +49,7 @@ export function WorkspaceSettings() {
         onAdd={addMember}
         onRemove={removeMember}
       />
-      <p className="text-[11px] leading-6 text-base-content/60">
+      <p className="text-[11px] leading-6 text-subtlest xl:col-span-2">
         Saved in this browser. Team names are used for assignments; they do not
         create accounts or send invitations.
       </p>

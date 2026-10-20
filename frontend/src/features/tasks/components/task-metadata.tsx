@@ -6,7 +6,7 @@ import { PriorityIcon } from "./task-icons";
 
 export function TaskLabel({ label }: { label: string }) {
   return (
-    <span className="inline-flex max-w-full rounded-[3px] bg-tint-gray px-1.5 text-xs leading-5 text-tint-gray-text [overflow-wrap:anywhere]">
+    <span className="inline-flex max-w-full rounded-md bg-panel-soft px-2 text-[11px] leading-5 text-tint-gray-text [overflow-wrap:anywhere]">
       {label}
     </span>
   );
@@ -31,7 +31,7 @@ export function TaskDueDate({ task }: { task: Task }) {
   return (
     <span
       title={overdue ? "Overdue" : "Due date"}
-      className={`inline-flex shrink-0 items-center gap-1 rounded-[3px] px-1.5 text-xs leading-5 font-medium ${overdue ? "bg-danger-subtle text-danger-text" : "bg-tint-gray text-tint-gray-text"}`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] leading-5 font-medium ${overdue ? "bg-danger-subtle text-danger-text" : "bg-tint-gray text-tint-gray-text"}`}
     >
       <svg
         aria-hidden="true"

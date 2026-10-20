@@ -17,7 +17,7 @@ export function BoardColumn({
       ref={ref}
       data-column={status}
       aria-labelledby={`column-${status}`}
-      className={`flex min-h-[480px] flex-col rounded-md p-1.5 ${isDropTarget ? "bg-selected ring-2 ring-focus ring-inset" : "bg-sunken"}`}
+      className={`board-column flex min-h-[420px] flex-col p-2.5 sm:min-h-[540px] ${isDropTarget ? "bg-selected ring-2 ring-focus ring-inset" : "bg-panel-soft"}`}
     >
       {children}
     </section>

@@ -26,6 +26,7 @@ export function DraggableTaskCard({
         task={task}
         epics={epics}
         onOpen={onOpen}
+        isDragging={isDragging}
         dragHandle={
           <button
             ref={handleRef}
@@ -33,7 +34,7 @@ export function DraggableTaskCard({
             disabled={disabled}
             aria-label={`Move ORB-${task.id}`}
             title="Drag to a column. Keyboard: Space, arrows, Space; Escape to cancel."
-            className="grid size-6 cursor-grab touch-none place-items-center rounded text-subtle opacity-0 group-hover:opacity-100 hover:bg-hover focus-visible:opacity-100 active:cursor-grabbing disabled:hidden pointer-coarse:opacity-100"
+            className="grid size-7 cursor-grab touch-none place-items-center rounded text-subtle opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-hover focus-visible:opacity-100 active:cursor-grabbing disabled:hidden pointer-coarse:opacity-100 pointer-coarse:size-11"
           >
             <svg
               aria-hidden="true"

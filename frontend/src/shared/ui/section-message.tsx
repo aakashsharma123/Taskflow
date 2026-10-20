@@ -35,7 +35,7 @@ export function SectionMessage({
         <circle cx="8" cy="8" r="7.5" fill="currentColor" />
         <path
           d={style.path}
-          stroke="#fff"
+          stroke="var(--color-icon-content)"
           strokeWidth="1.75"
           strokeLinecap="round"
         />
@@ -43,7 +43,7 @@ export function SectionMessage({
           cx="8"
           cy={tone === "information" ? 4.75 : 11.25}
           r="1"
-          fill="#fff"
+          fill="var(--color-icon-content)"
         />
       </svg>
       <div className="min-w-0 flex-1">{children}</div>

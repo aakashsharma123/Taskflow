@@ -46,7 +46,7 @@ export function CreateSprintForm({
         aria-label="Create sprint"
         noValidate
         onSubmit={submit}
-        className="mt-3 space-y-4 rounded-md border border-line p-4 sm:max-w-2xl"
+        className="ui-panel mt-3 space-y-5 p-5 sm:max-w-2xl"
       >
         <fieldset
           disabled={disabled}

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Dialog } from "@ark-ui/react/dialog";
+import { m } from "framer-motion";
 import { DialogPanel } from "@/shared/ui/dialog-panel";
 import { TaskForm } from "@/features/tasks/components/task-form";
 import type { CreateTaskInput } from "@/features/tasks/schemas/create-task-schema";
@@ -32,7 +33,9 @@ export function CreateTaskDialog({
       unmountOnExit
     >
       <Dialog.Trigger asChild>
-        <button
+        <m.button
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.96 }}
           type="button"
           disabled={disabled}
           className="ui-button ui-button-primary"
@@ -48,8 +51,8 @@ export function CreateTaskDialog({
           >
             <path d="M8 3v10M3 8h10" />
           </svg>
-          Create
-        </button>
+          Create<span className="hidden sm:inline"> task</span>
+        </m.button>
       </Dialog.Trigger>
       <DialogPanel title="Create task">
         <TaskForm

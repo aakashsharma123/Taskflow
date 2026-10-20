@@ -11,7 +11,7 @@ export function TaskTypeIcon() {
       <path
         d="m4.5 8.25 2.25 2.25 4.75-5"
         fill="none"
-        stroke="#fff"
+        stroke="var(--color-icon-content)"
         strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -28,7 +28,10 @@ export function EpicIcon() {
       className="size-4 shrink-0 text-icon-epic"
     >
       <rect width="16" height="16" rx="3" fill="currentColor" />
-      <path d="M9.25 2.75 4.5 9h3l-.75 4.25L11.5 7h-3z" fill="#fff" />
+      <path
+        d="M9.25 2.75 4.5 9h3l-.75 4.25L11.5 7h-3z"
+        fill="var(--color-icon-content)"
+      />
     </svg>
   );
 }

@@ -8,7 +8,7 @@ const statuses = {
   },
   in_review: {
     label: "In review",
-    lozenge: "bg-tint-blue text-tint-blue-text",
+    lozenge: "bg-tint-purple text-tint-purple-text",
   },
   done: { label: "Done", lozenge: "bg-tint-green text-tint-green-text" },
 } satisfies Record<TaskStatus, { label: string; lozenge: string }>;

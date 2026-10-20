@@ -64,7 +64,13 @@ export function OpenSprints({ disabled, onOpenTask }: SprintListProps) {
     .filter((sprint) => sprint.status !== "completed")
     .sort(byRank);
   return (
-    <section aria-label="Sprints" className="mb-6">
+    <section aria-label="Sprints" className="mb-8">
+      <div className="mb-4 flex flex-wrap items-baseline gap-2">
+        <h2 className="ui-section-title">Sprint planning</h2>
+        <p className="text-xs text-subtlest">
+          Give the next stretch of work a clear focus.
+        </p>
+      </div>
       <CreateSprintForm
         disabled={disabled}
         onCreate={(input) => {

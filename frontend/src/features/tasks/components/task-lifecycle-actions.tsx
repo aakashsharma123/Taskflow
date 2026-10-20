@@ -37,18 +37,18 @@ export function TaskActionsMenu({
         </button>
       </Menu.Trigger>
       <Menu.Positioner>
-        <Menu.Content className="z-[60] min-w-40 rounded-md bg-base-100 py-1.5 shadow-overlay outline-none">
+        <Menu.Content className="z-[60] min-w-40 rounded-xl border border-line bg-base-100 p-1.5 shadow-overlay outline-none">
           <Menu.Item
             value={keep}
             onSelect={() => onSelect(keep)}
-            className="cursor-pointer px-3 py-1.5 data-highlighted:bg-hover"
+            className="cursor-pointer rounded-lg px-3 py-2.5 data-highlighted:bg-hover"
           >
             {task.archived ? "Restore" : "Archive"}
           </Menu.Item>
           <Menu.Item
             value="delete"
             onSelect={() => onSelect("delete")}
-            className="cursor-pointer px-3 py-1.5 text-danger-text data-highlighted:bg-hover"
+            className="cursor-pointer rounded-lg px-3 py-2.5 text-danger-text data-highlighted:bg-hover"
           >
             Delete
           </Menu.Item>

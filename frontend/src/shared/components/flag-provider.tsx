@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, m } from "framer-motion";
 import {
   createContext,
   useContext,
@@ -35,58 +36,71 @@ export function FlagProvider({ children }: { children: ReactNode }) {
         className="pointer-events-none fixed bottom-6 left-4 z-[60] sm:left-6"
       >
         <div role="status">
-          {flag && (
-            <div className="pointer-events-auto flex w-[min(25rem,calc(100vw-2rem))] items-start gap-3 rounded-md bg-base-100 p-4 shadow-overlay">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 16 16"
-                className={`mt-0.5 size-5 shrink-0 ${flag.tone === "error" ? "text-icon-high" : "text-icon-done"}`}
-              >
-                <circle cx="8" cy="8" r="7" fill="currentColor" />
-                <path
-                  d={
-                    flag.tone === "error"
-                      ? "M5.5 5.5l5 5M10.5 5.5l-5 5"
-                      : "m5 8 2 2 4-4"
-                  }
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <div className="min-w-0 flex-1">
-                <p className="[overflow-wrap:anywhere]">{flag.message}</p>
-                {action && (
-                  <button
-                    type="button"
-                    className="mt-2 font-medium text-primary hover:underline"
-                    onClick={() => leaveFlag(action.onClick)}
-                  >
-                    {action.label}
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                aria-label="Dismiss message"
-                className="ui-button ui-button-subtle ui-button-icon ui-button-compact w-6"
-                onClick={() => leaveFlag(() => setFlag(null))}
+          <AnimatePresence initial={false} mode="wait">
+            {flag && (
+              <m.div
+                key={flag.message}
+                initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{
+                  opacity: 0,
+                  y: 8,
+                  pointerEvents: "none",
+                  transition: { duration: 0.14 },
+                }}
+                className="pointer-events-auto flex w-[min(25rem,calc(100vw-2rem))] items-start gap-3 rounded-xl border border-line bg-base-100 p-4 shadow-overlay"
               >
                 <svg
                   aria-hidden="true"
                   viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="size-4"
+                  className={`mt-0.5 size-5 shrink-0 ${flag.tone === "error" ? "text-icon-high" : "text-icon-done"}`}
                 >
-                  <path d="m4 4 8 8M12 4l-8 8" />
+                  <circle cx="8" cy="8" r="7" fill="currentColor" />
+                  <path
+                    d={
+                      flag.tone === "error"
+                        ? "M5.5 5.5l5 5M10.5 5.5l-5 5"
+                        : "m5 8 2 2 4-4"
+                    }
+                    fill="none"
+                    stroke="var(--color-icon-content)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
-              </button>
-            </div>
-          )}
+                <div className="min-w-0 flex-1">
+                  <p className="[overflow-wrap:anywhere]">{flag.message}</p>
+                  {action && (
+                    <button
+                      type="button"
+                      className="mt-2 font-medium text-primary hover:underline"
+                      onClick={() => leaveFlag(action.onClick)}
+                    >
+                      {action.label}
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Dismiss message"
+                  className="ui-button ui-button-subtle ui-button-icon ui-button-compact w-6"
+                  onClick={() => leaveFlag(() => setFlag(null))}
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    className="size-4"
+                  >
+                    <path d="m4 4 8 8M12 4l-8 8" />
+                  </svg>
+                </button>
+              </m.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
     </FlagContext>
