@@ -45,7 +45,7 @@ export function CreateTaskDialog({
       </Dialog.Trigger>
       <DialogPanel
         title="New task"
-        description="Give your next piece of work a clear place to start."
+        description="Turn your next idea into a clear, actionable task."
       >
         <TaskForm
           epics={epics}

@@ -1,20 +1,15 @@
-import { z } from "zod";
+import * as sprintCommands from "@/features/sprints/lib/sprint-commands";
+import { workspaceSchema } from "@/features/workspace/schemas/workspace-schema";
 import {
-  createSprintSchema,
-  sprintsSchema,
-  type CreateSprintInput,
-} from "@/features/sprints/schemas/sprint-schema";
+  projectSettingsSchema,
+  memberNameSchema,
+  type ProjectSettingsInput,
+} from "@/features/settings/schemas/workspace-settings-schema";
+import type { WorkspaceSettings } from "@/features/settings/types/workspace-settings";
+import type { CreateSprintInput } from "@/features/sprints/schemas/sprint-schema";
 import type { Sprint } from "@/features/sprints/types/sprint";
-import { recordTaskActivity, taskActivitySchema } from "./task-activity";
-import {
-  taskLabelsSchema,
-  taskDueDateSchema,
-} from "../schemas/task-metadata-schema";
-import {
-  workspaceHistorySchema,
-  recordWorkspaceDay,
-  type DailySummary,
-} from "./workspace-history";
+import { recordTaskActivity } from "./task-activity";
+import { recordWorkspaceDay, type DailySummary } from "./workspace-history";
 import type {
   Task,
   TaskStatus,
@@ -22,57 +17,12 @@ import type {
 } from "@/features/tasks/types/task";
 import {
   createTaskSchema,
-  taskTitleSchema,
-  taskDescriptionSchema,
   type CreateTaskInput,
 } from "@/features/tasks/schemas/create-task-schema";
 import { subtaskTitleSchema } from "@/features/tasks/schemas/subtask-schema";
 import { createEpicSchema } from "@/features/epics/schemas/create-epic-schema";
 
 export const TASK_STORAGE_KEY = "orbit.workspace.v1";
-const idSchema = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
-const subtaskSchema = z
-  .object({ id: idSchema, title: subtaskTitleSchema, completed: z.boolean() })
-  .strict();
-const savedTaskSchema: z.ZodType<Task> = z.object({
-  id: idSchema,
-  archived: z.boolean().default(false),
-  sprintId: idSchema.nullable().default(null),
-  placement: z.enum(["board", "backlog"]).default("board"),
-  activity: taskActivitySchema,
-  title: taskTitleSchema,
-  description: taskDescriptionSchema,
-  labels: taskLabelsSchema,
-  dueDate: taskDueDateSchema,
-  status: z.enum(["todo", "in_progress", "in_review", "done"]),
-  priority: z.enum(["low", "medium", "high"]),
-  epic: z.string().min(1).max(60).nullable(),
-  assignee: z.string().min(1).nullable(),
-  subtasks: z
-    .array(subtaskSchema)
-    .default([])
-    .refine(
-      (items) => new Set(items.map((item) => item.id)).size === items.length,
-    ),
-});
-const workspaceSchema = z.object({
-  version: z.literal(1),
-  sprints: sprintsSchema,
-  history: workspaceHistorySchema.default([]),
-  removedTasks: z.array(savedTaskSchema).default([]),
-  tasks: z
-    .array(savedTaskSchema)
-    .refine(
-      (tasks) => new Set(tasks.map((task) => task.id)).size === tasks.length,
-    ),
-  epics: z
-    .array(z.string().trim().min(1).max(60))
-    .refine(
-      (names) =>
-        new Set(names.map((name) => name.toLowerCase())).size === names.length,
-    )
-    .optional(),
-});
 
 type Snapshot = {
   tasks: Task[];
@@ -80,6 +30,7 @@ type Snapshot = {
   history: DailySummary[];
   epics: string[];
   sprints: Sprint[];
+  settings: WorkspaceSettings;
   ready: boolean;
   error: string | null;
 };
@@ -102,6 +53,15 @@ export function createTaskStore(
     history: [],
     epics: taskEpics(seed),
     sprints: [],
+    settings: {
+      projectName: "Orbit",
+      appearance: "apricot",
+      members: [
+        ...new Set(
+          seed.flatMap((task) => (task.assignee ? [task.assignee] : [])),
+        ),
+      ],
+    },
     ready: false,
     error: null,
   };
@@ -146,11 +106,27 @@ export function createTaskStore(
         )
       )
         throw new Error("Invalid sprint membership");
+      const settings = saved?.settings ?? {
+        ...serverSnapshot.settings,
+        members: [
+          ...new Set(
+            allTasks.flatMap((task) => (task.assignee ? [task.assignee] : [])),
+          ),
+        ],
+      };
+      if (
+        allTasks.some(
+          (task) =>
+            task.assignee !== null && !settings.members.includes(task.assignee),
+        )
+      )
+        throw new Error("Unknown member reference");
       snapshot = {
         tasks,
         removedTasks,
         epics,
         sprints,
+        settings,
         history: saved?.history ?? [],
         ready: true,
         error: null,
@@ -181,6 +157,7 @@ export function createTaskStore(
     epics = snapshot.epics,
     removedTasks = snapshot.removedTasks,
     sprints = snapshot.sprints,
+    settings = snapshot.settings,
   ): SaveResult {
     try {
       const timestamp = now().toISOString();
@@ -216,6 +193,7 @@ export function createTaskStore(
           removedTasks,
           history,
           sprints,
+          settings,
         }),
       );
       snapshot = {
@@ -223,6 +201,7 @@ export function createTaskStore(
         removedTasks,
         epics,
         sprints,
+        settings,
         history,
         ready: true,
         error: null,
@@ -238,14 +217,19 @@ export function createTaskStore(
     }
   }
 
+  function saveSprintChange(result: sprintCommands.SprintChange): SaveResult {
+    return result.ok
+      ? save(
+          result.tasks,
+          snapshot.epics,
+          snapshot.removedTasks,
+          result.sprints,
+        )
+      : result;
+  }
+
   function validateTask(input: CreateTaskInput) {
-    const assignees = [
-      ...new Set(
-        [...seed, ...snapshot.tasks].flatMap((task) =>
-          task.assignee ? [task.assignee] : [],
-        ),
-      ),
-    ];
+    const assignees = snapshot.settings.members;
     return createTaskSchema({ epics: snapshot.epics, assignees }).safeParse({
       ...input,
       epic: input.epic ?? "",
@@ -274,114 +258,91 @@ export function createTaskStore(
       };
     },
     load,
-    createSprint(input: CreateSprintInput): SaveResult {
+    updateSettings(input: ProjectSettingsInput): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
-      const validated = createSprintSchema.safeParse(input);
+      const validated = projectSettingsSchema.safeParse(input);
+      if (!validated.success)
+        return { ok: false, error: validated.error.issues[0].message };
+      return save(
+        snapshot.tasks,
+        snapshot.epics,
+        snapshot.removedTasks,
+        snapshot.sprints,
+        { ...snapshot.settings, ...validated.data },
+      );
+    },
+    addMember(name: string): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      const validated = memberNameSchema.safeParse(name);
       if (!validated.success)
         return { ok: false, error: validated.error.issues[0].message };
       if (
-        snapshot.sprints.some(
-          (sprint) =>
-            sprint.name.toLowerCase() === validated.data.name.toLowerCase(),
+        snapshot.settings.members.some(
+          (member) => member.toLowerCase() === validated.data.toLowerCase(),
         )
       )
-        return { ok: false, error: "Choose a unique sprint name." };
-      const id = nextId(snapshot.sprints);
-      if (!Number.isSafeInteger(id))
-        return { ok: false, error: "A sprint ID could not be assigned." };
-      return save(snapshot.tasks, snapshot.epics, snapshot.removedTasks, [
-        ...snapshot.sprints,
-        { ...validated.data, id, status: "planned", summary: null },
-      ]);
+        return { ok: false, error: "This member name already exists." };
+      if (snapshot.settings.members.length >= 50)
+        return {
+          ok: false,
+          error: "This workspace supports up to 50 local members.",
+        };
+      return save(
+        snapshot.tasks,
+        snapshot.epics,
+        snapshot.removedTasks,
+        snapshot.sprints,
+        {
+          ...snapshot.settings,
+          members: [...snapshot.settings.members, validated.data],
+        },
+      );
+    },
+    removeMember(name: string): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      if (!snapshot.settings.members.includes(name))
+        return { ok: false, error: "This member is no longer available." };
+      const unassign = (tasks: Task[]) =>
+        tasks.map((task) =>
+          task.assignee === name ? { ...task, assignee: null } : task,
+        );
+      return save(
+        unassign(snapshot.tasks),
+        snapshot.epics,
+        unassign(snapshot.removedTasks),
+        snapshot.sprints,
+        {
+          ...snapshot.settings,
+          members: snapshot.settings.members.filter(
+            (member) => member !== name,
+          ),
+        },
+      );
+    },
+    createSprint(input: CreateSprintInput): SaveResult {
+      const blocked = prepare();
+      if (blocked) return blocked;
+      return saveSprintChange(sprintCommands.createSprint(snapshot, input));
     },
     assignSprint(taskId: number, sprintId: number | null): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
-      const task = snapshot.tasks.find((task) => task.id === taskId);
-      if (!task || task.archived) return missingTask;
-      const sprint = snapshot.sprints.find((sprint) => sprint.id === sprintId);
-      if (sprintId !== null && (!sprint || sprint.status === "completed"))
-        return { ok: false, error: "Choose a planned or active sprint." };
-      if (
-        task.sprintId !== null &&
-        snapshot.sprints.some(
-          (sprint) =>
-            sprint.id === task.sprintId && sprint.status === "completed",
-        )
-      )
-        return {
-          ok: false,
-          error: "Reopen this completed task before changing its sprint.",
-        };
-      return saveTask({
-        ...task,
-        sprintId,
-        placement: sprint?.status === "active" ? "board" : task.placement,
-      });
+      return saveSprintChange(
+        sprintCommands.assignSprint(snapshot, taskId, sprintId),
+      );
     },
     startSprint(id: number): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
-      const sprint = snapshot.sprints.find((sprint) => sprint.id === id);
-      if (!sprint || sprint.status !== "planned")
-        return { ok: false, error: "Only a planned sprint can be started." };
-      if (snapshot.sprints.some((sprint) => sprint.status === "active"))
-        return {
-          ok: false,
-          error: "Complete the active sprint before starting another.",
-        };
-      if (
-        !snapshot.tasks.some((task) => task.sprintId === id && !task.archived)
-      )
-        return {
-          ok: false,
-          error: "Add at least one task before starting this sprint.",
-        };
-      return save(
-        snapshot.tasks.map((task) =>
-          task.sprintId === id ? { ...task, placement: "board" } : task,
-        ),
-        snapshot.epics,
-        snapshot.removedTasks,
-        snapshot.sprints.map((sprint) =>
-          sprint.id === id ? { ...sprint, status: "active" } : sprint,
-        ),
-      );
+      return saveSprintChange(sprintCommands.startSprint(snapshot, id));
     },
     completeSprint(id: number): SaveResult {
       const blocked = prepare();
       if (blocked) return blocked;
-      const sprint = snapshot.sprints.find((sprint) => sprint.id === id);
-      if (!sprint || sprint.status !== "active")
-        return { ok: false, error: "Only the active sprint can be completed." };
-      const members = snapshot.tasks.filter(
-        (task) => task.sprintId === id && !task.archived,
-      );
-      const completed = members.filter((task) => task.status === "done").length;
-      const tasks = snapshot.tasks.map((task) =>
-        task.sprintId === id && task.status !== "done"
-          ? { ...task, sprintId: null, placement: "backlog" as const }
-          : task,
-      );
-      return save(
-        tasks,
-        snapshot.epics,
-        snapshot.removedTasks,
-        snapshot.sprints.map((sprint) =>
-          sprint.id === id
-            ? {
-                ...sprint,
-                status: "completed",
-                summary: {
-                  total: members.length,
-                  completed,
-                  carried: members.length - completed,
-                },
-              }
-            : sprint,
-        ),
-      );
+      return saveSprintChange(sprintCommands.completeSprint(snapshot, id));
     },
     setPlacement(id: number, placement: TaskPlacement): SaveResult {
       const blocked = prepare();

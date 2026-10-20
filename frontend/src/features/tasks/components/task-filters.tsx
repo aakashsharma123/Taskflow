@@ -115,7 +115,8 @@ export function TaskFilterToolbar({
           filters.priority ||
           filters.status ||
           filters.label ||
-          filters.due
+          filters.due ||
+          filters.sprint
             ? " · active"
             : ""}
         </summary>

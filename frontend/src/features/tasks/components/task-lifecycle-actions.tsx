@@ -29,6 +29,12 @@ export function TaskLifecycleActions({
                 ? "Archive this task? Its details will stay available in Archive."
                 : "Restore this task to its previous location?"}
           </p>
+          {pending === "archive" && task.sprintId !== null && (
+            <p className="my-2 text-xs leading-6 text-base-content/65">
+              Archiving removes this task from its sprint. You can assign it
+              again after restoring.
+            </p>
+          )}
           <p className="text-xs text-base-content/60">
             Unsaved form changes will be discarded.
           </p>
