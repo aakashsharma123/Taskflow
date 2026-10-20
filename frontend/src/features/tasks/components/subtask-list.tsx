@@ -47,29 +47,31 @@ export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
   }
 
   return (
-    <section
-      aria-labelledby={`${inputId}-heading`}
-      className="rounded-2xl border border-base-300/80 bg-workspace p-4"
-    >
+    <section aria-labelledby={`${inputId}-heading`}>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h3 id={`${inputId}-heading`} className="text-sm font-semibold">
+        <h3 id={`${inputId}-heading`} className="text-base font-semibold">
           Subtasks
         </h3>
-        <span className="text-[11px] font-medium text-base-content/75">
+        <span className="text-xs text-subtle">
           {completed} of {task.subtasks.length} done
         </span>
       </div>
-      <p className="mb-4 text-[11px] leading-5 text-base-content/70">
+      {task.subtasks.length > 0 && (
+        <progress
+          aria-label="Subtasks done"
+          className="progress mb-2 h-1.5 w-full text-icon-done"
+          value={completed}
+          max={task.subtasks.length}
+        />
+      )}
+      <p className="mb-3 text-xs text-subtlest">
         Subtask changes save immediately. The parent task keeps its own status.
       </p>
       {task.subtasks.length > 0 ? (
-        <ul className="mb-4 space-y-2">
+        <ul className="mb-3 divide-y divide-line rounded-md border border-line">
           {task.subtasks.map((subtask) => (
-            <li
-              key={subtask.id}
-              className="rounded-xl border border-base-300/60 bg-base-100 px-3 py-2"
-            >
-              <label className="flex min-h-8 cursor-pointer items-center gap-3 text-xs leading-5">
+            <li key={subtask.id}>
+              <label className="flex min-h-10 cursor-pointer items-center gap-3 px-3 py-2 hover:bg-raised-hover">
                 <input
                   type="checkbox"
                   checked={subtask.completed}
@@ -86,7 +88,7 @@ export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
                   }}
                 />
                 <span
-                  className={`min-w-0 [overflow-wrap:anywhere] ${subtask.completed ? "text-base-content/65 line-through" : "text-base-content"}`}
+                  className={`min-w-0 [overflow-wrap:anywhere] ${subtask.completed ? "text-subtle line-through" : ""}`}
                 >
                   {subtask.title}
                 </span>
@@ -95,11 +97,14 @@ export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
           ))}
         </ul>
       ) : (
-        <p className="mb-4 text-xs leading-6 text-base-content/70">
+        <p className="mb-3 text-subtle">
           No subtasks yet. Break this task into smaller steps.
         </p>
       )}
-      <label htmlFor={inputId} className="mb-2 block text-xs font-medium">
+      <label
+        htmlFor={inputId}
+        className="mb-1 block text-xs font-semibold text-subtle"
+      >
         Subtask title
       </label>
       <div className="flex flex-wrap gap-2">
@@ -121,13 +126,9 @@ export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
           aria-invalid={fieldInvalid}
           aria-describedby={fieldInvalid ? `${inputId}-error` : undefined}
           placeholder="e.g. Sketch the first layout"
-          className="input h-11 min-w-0 flex-1 rounded-xl border-base-300 bg-base-100 text-xs"
+          className="ui-field ui-field-compact flex-1"
         />
-        <button
-          type="button"
-          onClick={add}
-          className="btn btn-primary h-11 rounded-xl text-xs"
-        >
+        <button type="button" onClick={add} className="ui-button">
           Add subtask
         </button>
       </div>
@@ -135,12 +136,12 @@ export function SubtaskList({ task, onAdd, onToggle }: SubtaskListProps) {
         <p
           id={`${inputId}-error`}
           role="alert"
-          className="mt-2 text-xs leading-6 text-rose-800"
+          className="mt-2 text-sm text-danger-text"
         >
           {error}
         </p>
       )}
-      <p role="status" className="mt-2 text-[11px] leading-5 text-teal-800">
+      <p role="status" className="mt-2 text-xs text-success-text">
         {notice}
       </p>
     </section>

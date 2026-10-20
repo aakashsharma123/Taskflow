@@ -2,35 +2,27 @@
 import Link from "next/link";
 import { useTaskStore } from "@/features/tasks/hooks/use-task-store";
 import { summarizeProject } from "@/features/dashboard/lib/project-summary";
+import { LoadError } from "@/shared/ui/load-error";
+import { Lozenge } from "@/shared/ui/lozenge";
 import { CompletionTrend } from "./completion-trend";
 import { EpicProgress } from "./epic-progress";
+
+const metricIcons = {
+  total: "M3 4h10M3 8h10M3 12h10",
+  board: "M2 3h12v10H2zM6 3v10M10 3v10",
+  backlog: "M5 4h9M5 8h9M5 12h9M2 4h.01M2 8h.01M2 12h.01",
+  completed: "m3 8.5 3 3 7-7",
+};
+
 export function ProjectDashboard() {
   const { tasks, epics, history, ready, error, reload } = useTaskStore();
   if (!ready)
     return (
-      <p
-        role="status"
-        className="rounded-2xl border border-base-300 bg-base-100 p-6 text-sm text-base-content/65"
-      >
+      <p role="status" className="text-subtle">
         Loading your project overview…
       </p>
     );
-  if (error)
-    return (
-      <div
-        role="alert"
-        className="rounded-2xl bg-rose-50 p-5 text-xs leading-6 text-rose-800"
-      >
-        {error}
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm ml-2"
-          onClick={reload}
-        >
-          Try again
-        </button>
-      </div>
-    );
+  if (error) return <LoadError message={error} onRetry={reload} />;
   const today = new Date().toISOString().slice(0, 10);
   const summary = summarizeProject(tasks, epics);
   const metrics = [
@@ -38,110 +30,111 @@ export function ProjectDashboard() {
       label: "Total tasks",
       value: summary.total,
       description: "Includes archived work",
+      icon: metricIcons.total,
     },
     {
       label: "On the board",
       value: summary.board,
       description: "Ready and active work",
+      icon: metricIcons.board,
     },
     {
       label: "In backlog",
       value: summary.backlog,
       description: "Ideas and parked tasks",
+      icon: metricIcons.backlog,
     },
     {
       label: "Completed",
       value: summary.completed,
       description: "Includes archived work",
+      icon: metricIcons.completed,
     },
   ];
   return (
-    <div className="space-y-6">
-      <section
-        className="flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-secondary/60 bg-secondary/25 p-6 sm:p-8"
-        aria-labelledby="project-pulse"
-      >
-        <div>
-          <p className="mb-2 text-[10px] font-semibold tracking-widest uppercase text-base-content/60">
-            Project pulse
-          </p>
-          <h2 id="project-pulse" className="text-xl font-semibold">
-            A clear view of your next move.
-          </h2>
-          <p className="mt-3 text-xs leading-6 text-base-content/70">
-            {summary.highPriorityOpen} high-priority tasks still open ·{" "}
-            {summary.archived} archived tasks
-          </p>
-          <Link
-            href="/tasks"
-            className="btn btn-primary btn-sm mt-4 rounded-xl"
-          >
-            Open board <span aria-hidden="true">↗</span>
-          </Link>
-        </div>
-        <div className="min-w-36 rounded-2xl bg-base-100/80 p-5">
-          <p className="text-xs text-base-content/65">Project completion</p>
-          <p className="my-2 text-4xl font-semibold tracking-tight">
-            {summary.completionRate}%
-          </p>
-          <progress
-            className="progress progress-primary w-36"
-            value={summary.completionRate}
-            max={100}
-            aria-label="Project completion"
-          />
-          <p className="mt-2 text-[11px] text-base-content/60">
-            {summary.completed} of {summary.total} tasks done
-          </p>
-        </div>
-      </section>
-      <dl className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+    <div className="space-y-4">
+      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="rounded-2xl border border-base-300/80 bg-base-100 p-4 sm:p-5"
+            className="relative rounded-md border border-line py-4 pr-4 pl-17"
           >
-            <dt className="text-xs font-medium text-base-content/65">
+            <dt className="font-medium">
+              <span
+                aria-hidden="true"
+                className="absolute top-4 left-4 grid size-10 place-items-center rounded-full bg-tint-gray text-subtle"
+              >
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-4"
+                >
+                  <path d={metric.icon} />
+                </svg>
+              </span>
               {metric.label}
             </dt>
             <dd
-              className="mt-3 text-3xl font-semibold"
+              className="text-2xl leading-8 font-semibold"
               data-metric={metric.label}
             >
               {metric.value}
             </dd>
-            <dd className="mt-2 text-[10px] leading-5 text-base-content/60">
-              {metric.description}
-            </dd>
+            <dd className="text-xs text-subtle">{metric.description}</dd>
           </div>
         ))}
       </dl>
-      <div className="grid gap-6 xl:grid-cols-[1fr_1.3fr]">
+      <div className="grid gap-4 xl:grid-cols-2">
         <section
-          className="rounded-2xl border border-base-300/80 bg-base-100 p-5 sm:p-6"
+          className="rounded-md border border-line p-5"
+          aria-labelledby="project-pulse"
+        >
+          <h2 id="project-pulse" className="text-base font-semibold">
+            Project completion
+          </h2>
+          <p className="mt-1 text-subtle">
+            {summary.highPriorityOpen} high-priority tasks still open ·{" "}
+            {summary.archived} archived tasks
+          </p>
+          <p className="mt-5 text-5xl leading-none font-semibold">
+            {summary.completionRate}%
+          </p>
+          <progress
+            className="progress mt-4 h-2 w-full text-icon-done"
+            value={summary.completionRate}
+            max={100}
+            aria-label="Project completion"
+          />
+          <p className="mt-2 text-xs text-subtle">
+            {summary.completed} of {summary.total} tasks done
+          </p>
+          <Link href="/tasks" className="ui-button mt-5">
+            Open board
+          </Link>
+        </section>
+        <section
+          className="rounded-md border border-line p-5"
           aria-labelledby="workflow-heading"
         >
-          <h2 id="workflow-heading" className="text-sm font-semibold">
-            Board workflow
+          <h2 id="workflow-heading" className="text-base font-semibold">
+            Status overview
           </h2>
-          <p className="mt-2 text-xs leading-6 text-base-content/60">
+          <p className="mt-1 text-subtle">
             Tasks currently on Board, grouped by status.
           </p>
-          <ul className="mt-5 space-y-5">
+          <ul className="mt-5 space-y-4">
             {summary.statuses.map((status) => (
               <li key={status.status}>
-                <div className="mb-2 flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      className={`size-2 rounded-full ${status.dot}`}
-                    />
-                    {status.label}
-                  </span>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <Lozenge className={status.lozenge}>{status.label}</Lozenge>
                   <span className="font-semibold">{status.count}</span>
                 </div>
                 <progress
-                  className="progress progress-primary w-full"
+                  className="progress h-1.5 w-full text-primary"
                   value={status.count}
                   max={summary.board || 1}
                   aria-label={`${status.label}: ${status.count} of ${summary.board} board tasks`}
@@ -151,9 +144,9 @@ export function ProjectDashboard() {
           </ul>
         </section>
         <CompletionTrend history={history} tasks={tasks} today={today} />
+        <EpicProgress epics={summary.epics} />
       </div>
-      <EpicProgress epics={summary.epics} />
-      <p className="text-[11px] text-base-content/60">
+      <p className="text-xs text-subtle">
         Overview uses tasks saved in this browser.
       </p>
     </div>

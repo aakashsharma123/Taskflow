@@ -1,11 +1,13 @@
-import { OrbitMark } from "@/shared/ui/orbit-mark";
 import type { Task } from "@/features/tasks/types/task";
+import { EpicIcon } from "@/features/tasks/components/task-icons";
+import { Lozenge } from "@/shared/ui/lozenge";
 
-const colors = [
-  "bg-violet-50 text-violet-800",
-  "bg-orange-50 text-orange-900",
-  "bg-teal-50 text-teal-800",
-];
+const stateLozenges = {
+  "Ready to plan": undefined,
+  "Not started": undefined,
+  "In motion": "bg-tint-blue text-tint-blue-text",
+  Complete: "bg-tint-green text-tint-green-text",
+};
 
 export function EpicCollection({
   epics,
@@ -36,27 +38,22 @@ export function EpicCollection({
   ];
   return (
     <section aria-label="Project epics">
-      <dl className="mb-7 grid grid-cols-3 gap-2 rounded-2xl border border-secondary/35 bg-secondary/10 p-4 sm:p-5">
+      <dl className="mb-6 grid grid-cols-3 divide-x divide-line rounded-md border border-line">
         {metrics.map((metric) => (
-          <div key={metric.label} className="flex min-w-0 flex-col">
-            <dt className="text-[10px] leading-5 text-base-content/65">
-              {metric.label}
-            </dt>
-            <dd className="order-first mb-1.5 text-2xl font-semibold tracking-tight">
+          <div key={metric.label} className="flex min-w-0 flex-col px-4 py-3">
+            <dt className="text-xs text-subtle">{metric.label}</dt>
+            <dd className="order-first text-xl leading-7 font-semibold">
               {metric.value}
             </dd>
           </div>
         ))}
       </dl>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">Your bigger picture</h3>
-        <span className="text-[10px] text-base-content/65">
-          {epics.length} {epics.length === 1 ? "goal" : "goals"}
-        </span>
-      </div>
+      <h3 className="mb-2 text-xs font-semibold tracking-wide text-subtle uppercase">
+        Progress by epic
+      </h3>
       {groups.length ? (
-        <ul className="space-y-3">
-          {groups.map((group, index) => {
+        <ul className="divide-y divide-line rounded-md border border-line">
+          {groups.map((group) => {
             const state =
               group.total === 0
                 ? "Ready to plan"
@@ -66,40 +63,23 @@ export function EpicCollection({
                     ? "In motion"
                     : "Not started";
             return (
-              <li
-                key={group.name}
-                className="rounded-2xl border border-base-300/80 bg-base-100 p-4 transition-colors hover:border-base-content/25 sm:p-5"
-              >
-                <div className="flex flex-wrap items-start gap-3">
-                  <span
-                    aria-hidden="true"
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${colors[index % colors.length]}`}
-                  >
-                    <OrbitMark className="size-6" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm leading-6 font-semibold [overflow-wrap:anywhere]">
-                      {group.name}
-                    </p>
-                    <p className="mt-1 text-[10px] text-base-content/65">
-                      {group.total}{" "}
-                      {group.total === 1 ? "linked task" : "linked tasks"}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-medium ${state === "Complete" ? "bg-teal-50 text-teal-800" : "bg-base-200/70 text-base-content/65"}`}
-                  >
-                    {state}
-                  </span>
+              <li key={group.name} className="px-4 py-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <EpicIcon />
+                  <p className="min-w-0 flex-1 font-semibold [overflow-wrap:anywhere]">
+                    {group.name}
+                  </p>
+                  <Lozenge className={stateLozenges[state]}>{state}</Lozenge>
                 </div>
-                <div className="mt-5 flex justify-between gap-3 text-[10px]">
-                  <span className="text-base-content/65">
-                    {group.completed} of {group.total} completed
+                <div className="mb-1.5 flex justify-between gap-3 text-xs text-subtle">
+                  <span>
+                    {group.completed} of {group.total}{" "}
+                    {group.total === 1 ? "task" : "tasks"} done
                   </span>
                   <span className="font-semibold">{group.percent}%</span>
                 </div>
                 <progress
-                  className="progress progress-primary mt-2 h-1.5 w-full"
+                  className="progress h-1.5 w-full text-icon-done"
                   aria-label={`${group.name} completed tasks`}
                   max={group.total || 1}
                   value={group.completed}
@@ -109,17 +89,11 @@ export function EpicCollection({
           })}
         </ul>
       ) : (
-        <div className="flex flex-col items-center rounded-2xl border border-dashed border-base-300 px-5 py-12 text-center">
-          <OrbitMark className="mb-4 size-12 text-secondary" />
-          <p className="text-sm font-semibold">
-            Make room for your next big idea.
-          </p>
-          <p className="mt-2 max-w-64 text-xs leading-6 text-base-content/65">
-            Create your first epic to bring related tasks together.
-          </p>
-        </div>
+        <p className="text-subtle">
+          Create your first epic to group related work.
+        </p>
       )}
-      <p className="mt-4 text-[10px] leading-5 text-base-content/65">
+      <p className="mt-2 text-xs text-subtlest">
         Progress includes completed and archived tasks linked to each epic.
       </p>
     </section>

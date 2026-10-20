@@ -70,7 +70,7 @@ export function ProjectSettingsForm({
               name="projectName"
               type="text"
               defaultValue={settings.projectName}
-              className="input w-full rounded-xl border-base-300 text-sm"
+              className="ui-field"
               aria-invalid={Boolean(errors.projectName)}
               aria-describedby={
                 errors.projectName ? `${id}-name-error` : undefined

@@ -1,55 +1,70 @@
-import { TaskCard } from "./task-card";
+import { TaskRow } from "./task-row";
 import type { Task } from "@/features/tasks/types/task";
 export function TaskList({
   tasks,
+  epics,
   mode,
   disabled,
   onOpen,
   onActivate,
 }: {
   tasks: Task[];
+  epics: string[];
   mode: "archive" | "backlog";
   disabled: boolean;
   onOpen: (id: number) => void;
   onActivate: (id: number) => void;
 }) {
+  const title = mode === "archive" ? "Archive" : "Backlog";
   return (
     <div
       role="region"
       aria-label={mode === "archive" ? "Archived tasks" : "Backlog tasks"}
       tabIndex={0}
-      className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+      className="overflow-hidden rounded-md border border-line"
     >
+      <div className="flex items-center gap-2 border-b border-line bg-sunken px-3 py-2.5">
+        <h2 className="font-semibold">{title}</h2>
+        <span className="text-subtle">
+          {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
+        </span>
+      </div>
       {tasks.length ? (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="divide-y divide-line">
           {tasks.map((task) => (
-            <li key={task.id} className="flex flex-col">
-              <TaskCard task={task} onOpen={() => onOpen(task.id)} />
-              {mode === "backlog" && (
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm mt-2 self-start"
-                  aria-label={`Move ORB-${task.id} to Board`}
-                  disabled={disabled}
-                  onClick={() => onActivate(task.id)}
-                >
-                  Move to Board <span aria-hidden="true">↗</span>
-                </button>
-              )}
+            <li key={task.id}>
+              <TaskRow
+                task={task}
+                epics={epics}
+                onOpen={() => onOpen(task.id)}
+                action={
+                  mode === "backlog" && (
+                    <button
+                      type="button"
+                      className="ui-button ui-button-compact"
+                      aria-label={`Move ORB-${task.id} to Board`}
+                      disabled={disabled}
+                      onClick={() => onActivate(task.id)}
+                    >
+                      Move to Board
+                    </button>
+                  )
+                }
+              />
             </li>
           ))}
         </ul>
       ) : (
-        <div className="rounded-2xl border border-dashed border-base-300 px-5 py-12 text-center">
-          <h2 className="text-sm font-semibold">
+        <div className="px-5 py-10 text-center">
+          <h3 className="font-semibold">
             {mode === "archive"
               ? "No archived tasks in this view"
               : "Your backlog is clear"}
-          </h2>
-          <p className="mt-2 text-xs leading-6 text-base-content/65">
+          </h3>
+          <p className="mt-1 text-subtle">
             {mode === "archive"
               ? "Archive a task from its details, or adjust your filters."
-              : "Add a task here to plan it later, or adjust your filters."}
+              : "Create a task here to plan it later, or adjust your filters."}
           </p>
         </div>
       )}

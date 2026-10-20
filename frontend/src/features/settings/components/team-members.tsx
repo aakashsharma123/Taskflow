@@ -66,7 +66,7 @@ export function TeamMembers({
             aria-describedby={fieldInvalid ? `${id}-error` : undefined}
             type="text"
             disabled={disabled}
-            className="input min-w-0 flex-1 rounded-xl border-base-300 text-sm"
+            className="ui-field flex-1"
             placeholder="e.g. Alex Rivera"
           />
           <button
@@ -120,7 +120,7 @@ export function TeamMembers({
                   )}
                 </div>
                 {confirm === name && (
-                  <div className="mt-3 rounded-xl border border-secondary bg-workspace p-3">
+                  <div className="mt-3 rounded-xl border border-secondary bg-sunken p-3">
                     <p className="text-xs leading-6">
                       Remove {name}? Their {assigned} assigned tasks will become
                       unassigned.

@@ -18,52 +18,62 @@ export function TaskSprintAction({
   const [value, setValue] = useState(String(task.sprintId ?? ""));
   if (task.archived) return null;
   return (
-    <section className="border-t border-base-300/70 pt-5">
-      <h3 className="text-sm font-semibold">Sprint</h3>
+    <section
+      aria-label="Sprint"
+      className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-3"
+    >
       {current?.status === "completed" ? (
-        <p className="mt-2 text-xs leading-6">
-          Completed in {current.name}. Reopen the task to plan it again.
-        </p>
+        <>
+          <span className="pt-1.5 text-sm font-medium text-subtle">Sprint</span>
+          <p className="min-w-0 pt-1.5">
+            Completed in {current.name}. Reopen the task to plan it again.
+          </p>
+        </>
       ) : (
         <>
-          <p className="my-2 text-[11px] leading-5 text-base-content/60">
-            Apply saves immediately and closes this panel. Unsaved form edits
-            are discarded. Active sprint tasks move to Board.
-          </p>
-          <label htmlFor={fieldId} className="text-xs font-medium">
-            Task sprint
+          <label
+            htmlFor={fieldId}
+            className="pt-1.5 text-sm font-medium text-subtle"
+          >
+            Sprint
           </label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <select
-              id={fieldId}
-              className="select min-w-0 flex-1 rounded-xl border-base-300 text-xs"
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-            >
-              <option value="">No sprint</option>
-              {sprints
-                .filter((sprint) => sprint.status !== "completed")
-                .map((sprint) => (
-                  <option key={sprint.id} value={sprint.id}>
-                    {sprint.name} · {sprint.status}
-                  </option>
-                ))}
-            </select>
-            <button
-              type="button"
-              className="btn btn-outline rounded-xl text-xs"
-              onClick={() => {
-                const result = onAssign(value ? Number(value) : null);
-                setError(result.ok ? "" : result.error);
-              }}
-            >
-              Apply sprint
-            </button>
+          <div className="min-w-0">
+            <div className="flex gap-1">
+              <select
+                id={fieldId}
+                className="ui-field ui-field-subtle ui-field-compact"
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+              >
+                <option value="">No sprint</option>
+                {sprints
+                  .filter((sprint) => sprint.status !== "completed")
+                  .map((sprint) => (
+                    <option key={sprint.id} value={sprint.id}>
+                      {sprint.name} · {sprint.status}
+                    </option>
+                  ))}
+              </select>
+              <button
+                type="button"
+                className="ui-button ui-button-compact self-center"
+                onClick={() => {
+                  const result = onAssign(value ? Number(value) : null);
+                  setError(result.ok ? "" : result.error);
+                }}
+              >
+                Apply<span className="sr-only"> sprint</span>
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-subtlest">
+              Apply saves immediately and closes this panel. Unsaved form edits
+              are discarded. Active sprint tasks move to Board.
+            </p>
           </div>
         </>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-xs text-rose-800">
+        <p role="alert" className="col-start-2 mt-1 text-sm text-danger-text">
           {error}
         </p>
       )}

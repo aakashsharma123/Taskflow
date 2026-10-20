@@ -4,6 +4,7 @@ import {
 } from "../schemas/sprint-schema";
 import type { Sprint } from "../types/sprint";
 import type { Task } from "@/features/tasks/types/task";
+import { taskSprintStatus } from "./task-sprint-state";
 
 type SprintState = { tasks: Task[]; sprints: Sprint[] };
 export type SprintChange =
@@ -57,12 +58,7 @@ export function assignSprint(
   const sprint = state.sprints.find((sprint) => sprint.id === sprintId);
   if (sprintId !== null && (!sprint || sprint.status === "completed"))
     return { ok: false, error: "Choose a planned or active sprint." };
-  if (
-    task.sprintId !== null &&
-    state.sprints.some(
-      (sprint) => sprint.id === task.sprintId && sprint.status === "completed",
-    )
-  )
+  if (taskSprintStatus(task, state.sprints) === "completed")
     return {
       ok: false,
       error: "Reopen this completed task before changing its sprint.",
